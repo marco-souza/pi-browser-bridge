@@ -1,5 +1,9 @@
 import type { Action, ActionParams, ErrorResponse, Request, Response } from "@pi-browser-bridge/protocol";
 
+import { createLogger } from "@pi-browser-bridge/logger";
+
+const logger = createLogger("chrome-ext");
+
 // ── Constants ────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = "pi-browser-bridge";
@@ -126,15 +130,15 @@ async function setStatus(status: ConnectionStatus): Promise<void> {
 // ── Logging ───────────────────────────────────────────────────────────────
 
 function log(msg: string): void {
-  console.log(`[pi-browser-bridge] ${msg}`);
+  logger.info(msg);
 }
 
 function warn(msg: string): void {
-  console.warn(`[pi-browser-bridge] ${msg}`);
+  logger.warn(msg);
 }
 
 function error(msg: string): void {
-  console.error(`[pi-browser-bridge] ${msg}`);
+  logger.error(msg);
 }
 
 // ── Config ────────────────────────────────────────────────────────────────

@@ -1,5 +1,9 @@
+import { createLogger } from "@pi-browser-bridge/logger";
+
+const logger = createLogger("chrome-ext:popup");
+
 // Popup script — Connection status, bridge toggle, and domain allowlist editor
-console.log("[pi-browser-bridge] Popup loaded");
+logger.info("Popup loaded");
 
 const STORAGE_KEY = "pi-browser-bridge";
 const ALLOWLIST_KEY = "domainAllowlist";
@@ -75,7 +79,7 @@ async function loadBridgeState(): Promise<void> {
       if (bridgeToggle) bridgeToggle.checked = true;
     }
   } catch (e) {
-    console.error("[pi-browser-bridge] Failed to load bridge state:", e);
+    logger.error("Failed to load bridge state:", e);
     updateStatusUI("disconnected");
   }
 }
@@ -105,7 +109,7 @@ bridgeToggle?.addEventListener("change", async () => {
     await chrome.storage.local.set({ [STORAGE_KEY]: { ...prev, enabled } });
     setStatusMessage(enabled ? "Bridge enabled." : "Bridge disabled.", true);
   } catch (e) {
-    console.error("[pi-browser-bridge] Failed to save enabled state:", e);
+    logger.error("Failed to save enabled state:", e);
     setStatusMessage("Failed to toggle bridge.", false);
   }
 });
@@ -124,7 +128,7 @@ async function loadAllowlist(): Promise<void> {
       textarea.value = list.join("\n");
     }
   } catch (e) {
-    console.error("[pi-browser-bridge] Failed to load allowlist:", e);
+    logger.error("Failed to load allowlist:", e);
     if (textarea) {
       textarea.value = DEFAULT_ALLOWLIST.join("\n");
     }
@@ -149,7 +153,7 @@ async function saveAllowlist(): Promise<void> {
     await chrome.storage.local.set({ [ALLOWLIST_KEY]: patterns });
     setStatusMessage("Allowlist saved.", true);
   } catch (e) {
-    console.error("[pi-browser-bridge] Failed to save allowlist:", e);
+    logger.error("Failed to save allowlist:", e);
     setStatusMessage("Failed to save allowlist.", false);
   }
 }

@@ -26,6 +26,10 @@ import type {
   Response,
 } from "@pi-browser-bridge/protocol";
 
+import { createLogger } from "@pi-browser-bridge/logger";
+
+const logger = createLogger("pi-bridge");
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 /** A pending request waiting for a matching response from the browser. */
@@ -99,20 +103,20 @@ app.get(
   upgradeWebSocket(() => ({
     onOpen(_event, ws) {
       wsConnections.add(ws.raw as WebSocket);
-      console.log("[pi-bridge] Chrome extension connected");
+      logger.info("Chrome extension connected");
     },
     onMessage(event, _ws) {
       handleMessage(event.data as string);
     },
     onClose(_event, ws) {
       wsConnections.delete(ws.raw as WebSocket);
-      console.log("[pi-bridge] Chrome extension disconnected");
+      logger.info("Chrome extension disconnected");
       if (wsConnections.size === 0) {
         rejectAllPending();
       }
     },
     onError(error, _ws) {
-      console.error("[pi-bridge] WebSocket error:", error);
+      logger.error("WebSocket error:", error);
     },
   })),
 );
@@ -133,7 +137,7 @@ app.get(
         // Client may have closed before we could send — ignore
       }
 
-      console.log(`[pi-bridge] Pi client connected (sequence ${seq})`);
+      logger.info(`Pi client connected (sequence ${seq})`);
     },
     onMessage(event, ws) {
       handleClientMessage(event.data as string, ws.raw as WebSocket);
@@ -142,11 +146,11 @@ app.get(
       const raw = ws.raw as WebSocket;
       const seq = clientSequences.get(raw);
       clientSequences.delete(raw);
-      console.log(`[pi-bridge] Pi client disconnected (sequence ${seq ?? "?"})`);
+      logger.info(`Pi client disconnected (sequence ${seq ?? "?"})`);
       cleanupClientRequests(raw);
     },
     onError(error, _ws) {
-      console.error("[pi-bridge] Client WebSocket error:", error);
+      logger.error("Client WebSocket error:", error);
     },
   })),
 );
@@ -281,8 +285,8 @@ function sendWithRetry<A extends Action = Action>(
       pendingRequests.delete(id);
 
       if (attempt <= MAX_RETRIES) {
-        console.warn(
-          `[pi-bridge] Send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
+        logger.warn(
+          `Send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
         );
         setTimeout(() => {
           sendWithRetry<A>(request, attempt + 1)
@@ -329,8 +333,8 @@ function sendViaClient<A extends Action = Action>(
       pendingRequests.delete(id);
 
       if (attempt <= MAX_RETRIES) {
-        console.warn(
-          `[pi-bridge] Client send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
+        logger.warn(
+          `Client send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
         );
         setTimeout(() => {
           sendViaClient<A>(request, attempt + 1)
@@ -392,16 +396,16 @@ function handleMessage(data: string): void {
   try {
     message = JSON.parse(data);
   } catch {
-    console.error(
-      "[pi-bridge] Failed to parse incoming JSON:",
+    logger.error(
+      "Failed to parse incoming JSON:",
       data.slice(0, 200),
     );
     return;
   }
 
   if (typeof message !== "object" || message === null) {
-    console.error(
-      "[pi-bridge] Received non-object message:",
+    logger.error(
+      "Received non-object message:",
       typeof message,
     );
     return;
@@ -413,8 +417,8 @@ function handleMessage(data: string): void {
   if (response.type === "ping") return;
 
   if (typeof response.id !== "string" || response.id.length === 0) {
-    console.error(
-      "[pi-bridge] Received message without valid id:",
+    logger.error(
+      "Received message without valid id:",
       data.slice(0, 200),
     );
     return;
@@ -450,7 +454,7 @@ function handleMessage(data: string): void {
     try {
       handler(message as Response);
     } catch (err) {
-      console.error("[pi-bridge] Error in response handler:", err);
+      logger.error("Error in response handler:", err);
     }
   }
 }
@@ -465,8 +469,8 @@ function handleClientMessage(data: string, clientWs: WebSocket): void {
   try {
     message = JSON.parse(data);
   } catch {
-    console.error(
-      "[pi-bridge] Failed to parse client JSON:",
+    logger.error(
+      "Failed to parse client JSON:",
       data.slice(0, 200),
     );
     return;
@@ -480,8 +484,8 @@ function handleClientMessage(data: string, clientWs: WebSocket): void {
   if (request.type === "ping") return;
 
   if (typeof request.id !== "string" || request.id.length === 0) {
-    console.error(
-      "[pi-bridge] Client sent message without valid id:",
+    logger.error(
+      "Client sent message without valid id:",
       data.slice(0, 200),
     );
     return;
@@ -592,8 +596,8 @@ function scheduleReconnect(port: number): void {
   // Deterministic delay based on connection order
   const delay = Math.max(0, clientSequenceNumber) * 300;
 
-  console.log(
-    `[pi-bridge] Failover scheduled in ${delay}ms ` +
+  logger.info(
+    `Failover scheduled in ${delay}ms ` +
       `(sequence ${clientSequenceNumber})`,
   );
 
@@ -601,17 +605,17 @@ function scheduleReconnect(port: number): void {
     reconnectTimer = null;
     if (shuttingDown) return;
 
-    console.log("[pi-bridge] Attempting to take over as owner...");
+    logger.info("Attempting to take over as owner...");
 
     // Try client mode first — maybe an earlier client already became owner
     const handle = await tryConnectAsClient(port);
     if (handle) {
-      console.log("[pi-bridge] Another client became owner — reconnected as client");
+      logger.info("Another client became owner — reconnected as client");
       return;
     }
 
     // No server running — become the owner
-    console.log("[pi-bridge] No owner found, taking over as owner...");
+    logger.info("No owner found, taking over as owner...");
     startAsOwner(port);
   }, delay);
 }
@@ -690,8 +694,8 @@ function tryConnectAsClient(port: number): Promise<ServerHandle | null> {
             if (msg.type === "welcome" && typeof msg.sequence === "number") {
               clientSequenceNumber = msg.sequence;
               welcomed = true;
-              console.log(
-                `[pi-bridge] Connected as client to owner server on port ${port} ` +
+              logger.info(
+                `Connected as client to owner server on port ${port} ` +
                   `(sequence ${clientSequenceNumber})`,
               );
               return;
@@ -709,16 +713,16 @@ function tryConnectAsClient(port: number): Promise<ServerHandle | null> {
       ws.on("close", () => {
         clientSocket = null;
         if (shuttingDown) {
-          console.log("[pi-bridge] Client disconnected (shutting down)");
+          logger.info("Client disconnected (shutting down)");
           return;
         }
-        console.warn("[pi-bridge] Lost connection to owner server — will attempt failover");
+        logger.warn("Lost connection to owner server — will attempt failover");
         rejectAllPending();
         scheduleReconnect(port);
       });
 
       ws.on("error", (err) => {
-        console.error("[pi-bridge] Client socket error:", err.message);
+        logger.error("Client socket error:", err.message);
       });
 
       resolve({
@@ -758,13 +762,13 @@ function startAsOwner(effectivePort: number): ServerHandle {
   // between our client-mode check and this bind attempt.
   httpServer.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {
-      console.warn(
-        `[pi-bridge] Port ${effectivePort} is already in use — ` +
+      logger.warn(
+        `Port ${effectivePort} is already in use — ` +
           `another instance likely took over. Retrying as client...`,
       );
     } else {
-      console.error(
-        `[pi-bridge] Server error on port ${effectivePort}:`,
+      logger.error(
+        `Server error on port ${effectivePort}:`,
         err.message,
       );
     }
@@ -787,7 +791,7 @@ function startAsOwner(effectivePort: number): ServerHandle {
   const boundPort =
     typeof addr === "object" && addr !== null ? addr.port : effectivePort;
 
-  console.log(`[pi-bridge] Owner server listening on port ${boundPort}`);
+  logger.info(`Owner server listening on port ${boundPort}`);
 
   serverHandle = {
     port: boundPort,

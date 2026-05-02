@@ -1,6 +1,9 @@
 import type { ErrorCode, ExecResult, Response, TypeParams } from "@pi-browser-bridge/protocol";
+import { createLogger } from "@pi-browser-bridge/logger";
 
-console.log("[pi-browser-bridge] Content script injected");
+const logger = createLogger("chrome-ext:content");
+
+logger.info("Content script injected");
 
 // ── Domain allowlist (defence-in-depth) ─────────────────────────────────
 
@@ -746,8 +749,8 @@ async function typeHandler(params: unknown): Promise<TypeSuccess | TypeError> {
   try {
     const result = await waitForElement(selector, timeout);
     el = result.element;
-    console.log(
-      `[pi-browser-bridge] waitForElement "${selector}" took ${result.elapsedMs}ms`,
+    logger.info(
+      `waitForElement "${selector}" took ${result.elapsedMs}ms`,
     );
   } catch {
     // Collect matching typable elements as suggestions for the LLM.
@@ -1254,14 +1257,14 @@ async function waitForElementHandler(
     };
   }
 
-  console.log(
-    `[pi-browser-bridge] waitForElement: waiting for "${selector}" (timeout=${timeout}ms)`,
+  logger.info(
+    `waitForElement: waiting for "${selector}" (timeout=${timeout}ms)`,
   );
 
   try {
     const result = await waitForElement(selector, timeout);
-    console.log(
-      `[pi-browser-bridge] waitForElement: found "${selector}" in ${result.elapsedMs}ms`,
+    logger.info(
+      `waitForElement: found "${selector}" in ${result.elapsedMs}ms`,
     );
     return {
       found: true,
@@ -1270,8 +1273,8 @@ async function waitForElementHandler(
       tagName: result.element.tagName.toLowerCase(),
     };
   } catch {
-    console.log(
-      `[pi-browser-bridge] waitForElement: timeout waiting for "${selector}" after ${timeout}ms`,
+    logger.info(
+      `waitForElement: timeout waiting for "${selector}" after ${timeout}ms`,
     );
     return {
       found: false,
@@ -1330,14 +1333,14 @@ async function waitForTextHandler(
   }
 
   const scopeLabel = scope ? ` within "${scope}"` : "";
-  console.log(
-    `[pi-browser-bridge] waitForText: waiting for "${text}"${scopeLabel} (timeout=${timeout}ms)`,
+  logger.info(
+    `waitForText: waiting for "${text}"${scopeLabel} (timeout=${timeout}ms)`,
   );
 
   try {
     const result = await waitForText(text, scope, timeout);
-    console.log(
-      `[pi-browser-bridge] waitForText: found "${text}" in ${result.elapsedMs}ms`,
+    logger.info(
+      `waitForText: found "${text}" in ${result.elapsedMs}ms`,
     );
     return {
       found: true,
@@ -1345,8 +1348,8 @@ async function waitForTextHandler(
       text,
     };
   } catch {
-    console.log(
-      `[pi-browser-bridge] waitForText: timeout waiting for "${text}" after ${timeout}ms`,
+    logger.info(
+      `waitForText: timeout waiting for "${text}" after ${timeout}ms`,
     );
     return {
       found: false,
@@ -1524,7 +1527,7 @@ function errorResponse(
 
 /** Log an incoming action and return metadata for the handler pipeline. */
 function logAction(id: string, action: string): void {
-  console.log(`[pi-browser-bridge] action: ${action} (id=${id})`);
+  logger.info(`action: ${action} (id=${id})`);
 }
 
 // ── Message dispatcher ──────────────────────────────────────────────────
@@ -1538,14 +1541,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   // ── Ping (service-worker injection check) ──────────────────────
   if (msg.type === "ping") {
-    console.log("[pi-browser-bridge] ping received");
+    logger.info("ping received");
     sendResponse({ type: "pong" });
     return false; // synchronous — port closes immediately
   }
 
   // ── Heartbeat (explicit health check) ──────────────────────────
   if (msg.type === "heartbeat") {
-    console.log("[pi-browser-bridge] heartbeat received");
+    logger.info("heartbeat received");
     sendResponse({ status: "ok" });
     return false; // synchronous
   }
@@ -1597,16 +1600,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           try {
             sendResponse({ id, result } satisfies Response);
           } catch {
-            console.warn(
-              "[pi-browser-bridge] Failed to send response (port already closed)",
+            logger.warn(
+              "Failed to send response (port already closed)",
             );
           }
         })
         .catch((err: unknown) => {
           const rawMessage =
             err instanceof Error ? err.message : String(err);
-          console.error(
-            `[pi-browser-bridge] Handler crashed for "${action}":`,
+          logger.error(
+            `Handler crashed for "${action}":`,
             rawMessage,
           );
 

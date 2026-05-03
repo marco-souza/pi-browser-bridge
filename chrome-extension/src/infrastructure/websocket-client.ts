@@ -95,7 +95,7 @@ export class WebSocketClient {
 
 		try {
 			this.ws = new WebSocket(url);
-		} catch (e) {
+		} catch (e: unknown) {
 			this.logger.error(`Failed to create WebSocket: ${e}`);
 			this.scheduleReconnect();
 			return;
@@ -135,7 +135,7 @@ export class WebSocketClient {
 				this.onMessage(
 					typeof event.data === "string" ? event.data : String(event.data),
 				);
-			} catch (e) {
+			} catch (e: unknown) {
 				this.logger.error(`Unhandled error in message callback: ${e}`);
 			}
 		};
@@ -226,7 +226,7 @@ export class WebSocketClient {
 			if (this.ws?.readyState === WebSocket.OPEN) {
 				try {
 					this.ws.send(JSON.stringify({ type: "ping" }));
-				} catch (e) {
+				} catch (e: unknown) {
 					this.logger.warn(`Keep-alive ping failed: ${e}`);
 				}
 			}

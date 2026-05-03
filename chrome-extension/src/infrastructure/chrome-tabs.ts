@@ -261,7 +261,7 @@ export async function forwardToContentScript(
 	for (let attempt = 0; attempt <= maxRetries; attempt++) {
 		try {
 			await ensureContentScript(tabId);
-		} catch (e) {
+		} catch (e: unknown) {
 			const err = e instanceof Error ? e.message : String(e);
 			if (attempt < maxRetries) {
 				await sleep(300);
@@ -319,7 +319,7 @@ export async function forwardToContentScript(
 					tabId,
 				},
 			};
-		} catch (e) {
+		} catch (e: unknown) {
 			const err = e instanceof Error ? e.message : String(e);
 
 			// If the tab was closed, no point retrying.

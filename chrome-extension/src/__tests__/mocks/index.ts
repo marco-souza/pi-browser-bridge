@@ -11,15 +11,9 @@
  * @module mocks
  */
 
-import {
-	chromeRuntimeMock,
-	installChromeRuntimeMock,
-} from "./chrome-runtime.js";
-import {
-	chromeStorageMock,
-	installChromeStorageMock,
-} from "./chrome-storage.js";
-import { chromeTabsMock, installChromeTabsMock } from "./chrome-tabs.js";
+import { chromeRuntimeMock } from "./chrome-runtime.js";
+import { chromeStorageMock } from "./chrome-storage.js";
+import { chromeTabsMock } from "./chrome-tabs.js";
 
 export {
 	chromeRuntimeMock,

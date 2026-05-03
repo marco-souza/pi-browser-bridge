@@ -35,12 +35,7 @@
  * @module benchmarks/websocket-relay
  */
 
-import {
-	onResponse,
-	send,
-	start,
-	stop,
-} from "../../infrastructure/ws-server.js";
+import { send, start, stop } from "../../infrastructure/ws-server.js";
 
 // ── Types ────────────────────────────────────────────────────────────────
 

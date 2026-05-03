@@ -154,7 +154,7 @@ export function notifyResponseHandlers(response: Response): void {
 	for (const handler of responseHandlers) {
 		try {
 			handler(response);
-		} catch (err) {
+		} catch (err: unknown) {
 			logger.error("Error in response handler:", err);
 		}
 	}

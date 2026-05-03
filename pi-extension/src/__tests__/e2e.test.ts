@@ -42,9 +42,6 @@ interface SimRequest {
 	params: Record<string, unknown>;
 }
 
-/** Response handler signature used by SimBrowser. */
-type RequestHandler = (req: SimRequest) => Record<string, unknown> | void;
-
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 let currentServer: ReturnType<typeof start> | null = null;
@@ -232,7 +229,6 @@ function createSimBrowser(
 
 				const text =
 					typeof req.params?.text === "string" ? req.params.text : "";
-				const clear = req.params?.clear !== false;
 				respond(req.id, {
 					typed: true,
 					selector,
@@ -439,7 +435,7 @@ function expectError(result: any, contains: string) {
 }
 
 /** Assert two objects are deeply equal (Bun-style). */
-function expectDeepEqual(actual: any, expected: any) {
+function _expectDeepEqual(actual: any, expected: any) {
 	expect(actual).toEqual(expected);
 }
 

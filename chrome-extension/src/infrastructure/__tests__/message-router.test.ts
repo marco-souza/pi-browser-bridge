@@ -14,7 +14,7 @@ import {
 	chromeStorageMock,
 	chromeTabsMock,
 } from "../../__tests__/mocks/index.js";
-import { ALLOWLIST_KEY, STORAGE_KEY } from "../chrome-storage.js";
+import { ALLOWLIST_KEY } from "../chrome-storage.js";
 import {
 	createMessageRouter,
 	type MessageRouterOptions,
@@ -79,7 +79,7 @@ function getSentResponse(
 }
 
 /** Get all sent responses. */
-function getAllSentResponses(wsClient: WebSocketClient): Response[] {
+function _getAllSentResponses(wsClient: WebSocketClient): Response[] {
 	const sendMock = wsClient.send as ReturnType<typeof vi.fn>;
 	return sendMock.mock.calls
 		.map((c: any[]) => {

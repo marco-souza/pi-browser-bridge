@@ -254,7 +254,7 @@ export interface Request<A extends Action = Action> {
  *
  * @typeParam A — Concrete action. Defaults to the full {@link Action} union.
  */
-export interface Response<A extends Action = Action> {
+export interface Response<_A extends Action = Action> {
 	/** Correlation id matching the originating {@link Request}. */
 	id: string;
 	/** Action result payload (shape depends on `action`). */

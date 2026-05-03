@@ -65,7 +65,7 @@ async function serviceHandleNavigate(
 	id: string,
 	params: unknown,
 	tabId: number | undefined,
-	activeTabId: { current: number | null },
+	_activeTabId: { current: number | null },
 ): Promise<Response> {
 	const p = params as Record<string, unknown> | null | undefined;
 	const url = p?.url;
@@ -198,7 +198,7 @@ async function serviceHandleNavigate(
 				tabId: targetTabId,
 			},
 		};
-	} catch (e) {
+	} catch (e: unknown) {
 		const err = e instanceof Error ? e.message : String(e);
 
 		if (
@@ -273,7 +273,7 @@ async function serviceHandleListTabs(
 	try {
 		const tabs = await listTabs(urlPattern, currentWindowOnly);
 		return { id, result: { tabs } };
-	} catch (e) {
+	} catch (e: unknown) {
 		const err = e instanceof Error ? e.message : String(e);
 		return {
 			id,
@@ -327,7 +327,7 @@ async function serviceHandleCloseTab(
 	try {
 		await closeTab(tabId);
 		return { id, result: { closed: true } };
-	} catch (e) {
+	} catch (e: unknown) {
 		const err = e instanceof Error ? e.message : String(e);
 		return {
 			id,

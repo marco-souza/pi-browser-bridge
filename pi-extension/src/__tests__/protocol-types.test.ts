@@ -13,13 +13,11 @@
 import { describe, expect, test } from "bun:test";
 import type {
 	Action,
-	ActionParams,
 	CloseTabParams,
 	CreateTabParams,
 	ErrorCode,
 	ErrorResponse,
 	ListTabsParams,
-	NavigateParams,
 	Request,
 	Response,
 } from "@pi-browser-bridge/protocol";

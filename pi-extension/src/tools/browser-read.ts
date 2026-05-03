@@ -141,7 +141,7 @@ export async function browserRead(
 				maxLength,
 			} satisfies ReadParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		// send() rejects with an ErrorResponse on connection / timeout failures.
 		const e = err as ErrorResponse;
 		const msg = [`Read request failed: ${e.message ?? String(err)}`];

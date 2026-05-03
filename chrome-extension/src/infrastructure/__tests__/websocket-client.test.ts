@@ -9,7 +9,6 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { createMockWebSocket } from "../../__tests__/mocks/websocket.js";
-import type { ConnectionStatus } from "../chrome-runtime.js";
 import { WebSocketClient } from "../websocket-client.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -32,12 +31,6 @@ function createSpyLogger() {
  */
 function createMockWebSocketSpy() {
 	let instance: ReturnType<typeof createMockWebSocket> | null = null;
-
-	// Create the mock instance eagerly so connectOnCreate sets readyState=OPEN
-	const mock = createMockWebSocket({
-		url: "ws://localhost:9242",
-		connectOnCreate: true,
-	});
 
 	// Spy function that acts as a constructor and also tracks calls
 	const spy = vi.fn(function (this: any, url: string) {

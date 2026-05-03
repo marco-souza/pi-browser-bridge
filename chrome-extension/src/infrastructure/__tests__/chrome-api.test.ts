@@ -599,7 +599,7 @@ describe("chrome-tabs — forwardToContentScript", () => {
 
 		expect(result).toEqual({
 			id: "req-1",
-			result: { text: "page content" },
+			result: { tabId: 1, text: "page content" },
 		});
 		removeInjected(1);
 	});
@@ -621,12 +621,12 @@ describe("chrome-tabs — forwardToContentScript", () => {
 					return Promise.resolve({ type: "pong" });
 				}
 
-				// Request messages: fail first, succeed second
+				// Request messages: fail first two attempts, succeed third
 				if (callCount <= 3) {
 					return Promise.reject(new Error("Could not establish connection"));
 				}
 
-				return Promise.resolve({ id: "req-1", result: "ok" });
+				return Promise.resolve({ id: "req-1", result: { tabId: 1 } });
 			},
 		);
 
@@ -637,11 +637,12 @@ describe("chrome-tabs — forwardToContentScript", () => {
 		// After 300ms sleep, retried. Let it resolve.
 		// We need to advance past the sleeps
 		await vi.advanceTimersByTimeAsync(350); // First retry sleep
+		await vi.advanceTimersByTimeAsync(350); // Second retry sleep
 
 		const result = await promise;
 		vi.useRealTimers();
 
-		expect(result).toEqual({ id: "req-1", result: "ok" });
+		expect(result).toEqual({ id: "req-1", result: { tabId: 1 } });
 	}, 10000); // 10s timeout for async test
 
 	test("returns error when tab closed (receiving end does not exist)", async () => {
@@ -656,7 +657,7 @@ describe("chrome-tabs — forwardToContentScript", () => {
 		});
 
 		expect(result.error).toBeDefined();
-		expect(result.error?.code).toBe("BROWSER_NOT_CONNECTED");
+		expect(result.error?.code).toBe("TAB_NOT_FOUND");
 		expect(result.error?.message).toContain("closed");
 		removeInjected(1);
 	});

@@ -52,10 +52,8 @@ function sleep(ms: number): Promise<void> {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("send() — no browser connected", () => {
-	let port: number;
-
 	beforeEach(async () => {
-		port = await startOnDynamicPort();
+		await startOnDynamicPort();
 	});
 
 	afterEach(() => {
@@ -521,7 +519,6 @@ describe("start() / stop() lifecycle", () => {
 
 	test("start() is idempotent — stops previous before starting new", async () => {
 		const s1 = await start(0);
-		const port1 = s1.port;
 		const s2 = await start(0);
 		// Both calls should succeed; the second replaces the first
 		expect(s2.port).toBeGreaterThan(0);
@@ -550,7 +547,7 @@ describe("start() / stop() lifecycle", () => {
 		});
 
 		// After stop, new send() calls should reject (no active server)
-		const srv2 = await start(0);
+		await start(0);
 		// No client connected to new server
 		await expect(
 			send({ id: "after-stop", action: "read", params: {} }),

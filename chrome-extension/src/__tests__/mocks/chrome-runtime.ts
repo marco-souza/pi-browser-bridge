@@ -80,13 +80,13 @@ export const chromeRuntimeMock = {
 		};
 
 		for (const listener of listeners) {
-			let asyncResponse = false;
+			let _asyncResponse = false;
 			const sendResponse = (response?: unknown) => {
 				sendResponseCallbacks.push(() => response);
 			};
 			const result = listener(message, fullSender, sendResponse);
 			if (result === true) {
-				asyncResponse = true;
+				_asyncResponse = true;
 			}
 		}
 

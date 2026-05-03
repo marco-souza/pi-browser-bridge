@@ -110,7 +110,7 @@ async function loadBridgeState(): Promise<void> {
 			if (infoPort) infoPort.textContent = "9242";
 			if (bridgeToggle) bridgeToggle.checked = true;
 		}
-	} catch (e) {
+	} catch (e: unknown) {
 		logger.error("Failed to load bridge state:", e);
 		updateStatusUI("disconnected");
 	}
@@ -144,7 +144,7 @@ bridgeToggle?.addEventListener("change", async () => {
 			(stored[STORAGE_KEY] as Record<string, unknown> | undefined) ?? {};
 		await chrome.storage.local.set({ [STORAGE_KEY]: { ...prev, enabled } });
 		setStatusMessage(enabled ? "Bridge enabled." : "Bridge disabled.", true);
-	} catch (e) {
+	} catch (e: unknown) {
 		logger.error("Failed to save enabled state:", e);
 		setStatusMessage("Failed to toggle bridge.", false);
 	}
@@ -166,7 +166,7 @@ async function loadAllowlist(): Promise<void> {
 		if (textarea) {
 			textarea.value = list.join("\n");
 		}
-	} catch (e) {
+	} catch (e: unknown) {
 		logger.error("Failed to load allowlist:", e);
 		if (textarea) {
 			textarea.value = DEFAULT_ALLOWLIST.join("\n");
@@ -194,7 +194,7 @@ async function saveAllowlist(): Promise<void> {
 	try {
 		await chrome.storage.local.set({ [ALLOWLIST_KEY]: patterns });
 		setStatusMessage("Allowlist saved.", true);
-	} catch (e) {
+	} catch (e: unknown) {
 		logger.error("Failed to save allowlist:", e);
 		setStatusMessage("Failed to save allowlist.", false);
 	}
@@ -249,7 +249,7 @@ async function loadTabs(): Promise<void> {
         `;
 			})
 			.join("");
-	} catch (e) {
+	} catch (e: unknown) {
 		logger.error("Failed to load tabs:", e);
 		if (tabListEl) {
 			tabListEl.innerHTML =

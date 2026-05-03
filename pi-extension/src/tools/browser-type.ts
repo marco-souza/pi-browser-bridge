@@ -168,7 +168,7 @@ export async function browserType(
 				timeout,
 			} satisfies TypeParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		const e = err as ErrorResponse;
 		const msg = [`Type request failed: ${e.message ?? String(err)}`];
 		if (e.suggestion) msg.push(e.suggestion);

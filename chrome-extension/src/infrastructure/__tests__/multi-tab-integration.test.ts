@@ -24,8 +24,6 @@ import { ALLOWLIST_KEY } from "../chrome-storage.js";
 import {
 	createTab,
 	forwardToContentScript,
-	getActiveTabId,
-	getActiveTabUrl,
 	getTab,
 	isInjected,
 	markInjected,
@@ -67,7 +65,7 @@ function getSentResponse(
 	}
 }
 
-function getAllSentResponses(wsClient: WebSocketClient): Response[] {
+function _getAllSentResponses(wsClient: WebSocketClient): Response[] {
 	const sendMock = wsClient.send as ReturnType<typeof vi.fn>;
 	return sendMock.mock.calls
 		.map((c: unknown[]) => {
@@ -994,8 +992,6 @@ describe("Multi-tab integration — single-tab backward compatibility", () => {
 
 describe("Multi-tab integration — tab lifecycle", () => {
 	test("activeTabId is cleared when the active tab is removed", async () => {
-		const activeTabId = { current: 1 as number | null };
-
 		// Simulate tab removal
 		chromeTabsMock.setTabs([
 			{ id: 1, url: "https://example.com", active: true },

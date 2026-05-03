@@ -114,7 +114,7 @@ export async function browserExec(
 				code: params.code,
 			} satisfies ExecParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		const e = err as ErrorResponse;
 		const msg = [`Exec request failed: ${e.message ?? String(err)}`];
 		if (e.suggestion) msg.push(e.suggestion);

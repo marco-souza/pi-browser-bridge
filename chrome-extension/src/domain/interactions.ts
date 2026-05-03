@@ -143,7 +143,6 @@ export async function clickHandler(
 
 	// ── Phase 4: click ───────────────────────────────────────────────────
 	const previousUrl = _doc.defaultView?.location.href ?? "";
-	const _previousTitle = _doc.title;
 
 	(element as HTMLElement).click();
 

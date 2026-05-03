@@ -180,7 +180,7 @@ export async function browserScreenshot(
 				fullPage,
 			} satisfies ScreenshotParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		// send() rejects with an ErrorResponse on connection / timeout failures.
 		const e = err as ErrorResponse;
 		const msg = [`Screenshot request failed: ${e.message ?? String(err)}`];

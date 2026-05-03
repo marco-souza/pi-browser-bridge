@@ -104,7 +104,7 @@ export async function handleExec(
 	let raw: unknown;
 	try {
 		raw = globalThis.eval?.(code);
-	} catch (syncErr) {
+	} catch (syncErr: unknown) {
 		const msg = syncErr instanceof Error ? syncErr.message : String(syncErr);
 		return {
 			value: undefined,
@@ -120,7 +120,7 @@ export async function handleExec(
 	) {
 		try {
 			raw = await withTimeout(raw as Promise<unknown>, EXEC_TIMEOUT_MS);
-		} catch (asyncErr) {
+		} catch (asyncErr: unknown) {
 			const msg =
 				asyncErr instanceof Error ? asyncErr.message : String(asyncErr);
 			return {

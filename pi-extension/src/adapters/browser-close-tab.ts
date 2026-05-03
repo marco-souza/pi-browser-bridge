@@ -15,7 +15,6 @@ import {
 import type { ErrorResponse } from "@pi-browser-bridge/protocol";
 import { type Static, Type } from "typebox";
 import { executeCloseTabUseCase } from "../application/close-tab-usecase.js";
-import type { CloseTabResult } from "../application/types.js";
 import { createBridgeTransport } from "../infrastructure/ws-transport.js";
 
 // ── TypeBox Schema ────────────────────────────────────────────────────────
@@ -67,7 +66,6 @@ async function execute(
 		};
 	}
 
-	const _data = result.data as CloseTabResult;
 	return {
 		content: [textBlock(`Tab ${params.tabId} has been closed.`)],
 		details: undefined,

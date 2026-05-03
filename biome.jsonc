@@ -15,12 +15,22 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
+			"recommended": true,
 			"correctness": {
-				"noUnusedVariables": "off",
-				"noUnusedImports": "off",
-				"noUnusedFunctionParameters": "off"
+				"noUnusedVariables": "error",
+				"noUnusedImports": "error",
+				"noUnusedFunctionParameters": "error",
+				"noUnusedPrivateClassMembers": "error"
 			},
 			"suspicious": {
+				"noExplicitAny": "error",
+				"noConfusingVoidType": "error",
+				"noAssignInExpressions": "error",
+				"noImplicitAnyLet": "error",
+				"noRedeclare": "error",
+				"noEmptyInterface": "error",
+				"noUnsafeDeclarationMerging": "error",
+				"noVar": "error",
 				// Production code must use the logger instead of raw console.* calls.
 				"noConsole": {
 					"level": "error",
@@ -29,6 +39,13 @@
 						"allow": []
 					}
 				}
+			},
+			"style": {
+				"noNonNullAssertion": "error",
+				"useConst": "error"
+			},
+			"complexity": {
+				"noBannedTypes": "error"
 			}
 		}
 	},
@@ -134,7 +151,7 @@
 				}
 			}
 		},
-		// ── Mock files: allow non-null assertions ─────────────────────────────
+		// ── Mock files: allow non-null assertions and confusing void ─────────────
 		{
 			"includes": ["**/mocks/**"],
 			"linter": {

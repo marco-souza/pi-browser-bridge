@@ -228,7 +228,7 @@ export async function browserNavigate(
 				timeout,
 			} satisfies NavigateParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		const e = err as ErrorResponse;
 		const msg = [`Navigate request failed: ${e.message ?? String(err)}`];
 		if (e.suggestion) msg.push(e.suggestion);

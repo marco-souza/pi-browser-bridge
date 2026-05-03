@@ -161,7 +161,7 @@ export async function browserWaitForText(
 				timeout,
 			} satisfies WaitForTextParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		const e = err as ErrorResponse;
 		const msg = [`Wait request failed: ${e.message ?? String(err)}`];
 		if (e.suggestion) msg.push(e.suggestion);

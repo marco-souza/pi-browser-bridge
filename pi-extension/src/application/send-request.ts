@@ -46,7 +46,7 @@ export async function sendRequest<A extends Action>(
 	try {
 		const response = await transport.send(request);
 		return { success: true, data: response };
-	} catch (err) {
+	} catch (err: unknown) {
 		// Transport errors are already ErrorResponse objects (by contract
 		// of BridgeTransport.send). Defensively handle non-ErrorResponse
 		// throwables too.

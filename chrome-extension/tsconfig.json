@@ -4,5 +4,6 @@
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"types": ["chrome"]
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"exclude": ["**/__tests__"]
 }

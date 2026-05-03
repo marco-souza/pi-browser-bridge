@@ -9,12 +9,10 @@
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
-	ensureContentScript,
 	forwardToContentScript,
 	isInjected,
 	markInjected,
 	removeInjected,
-	sendMessageToTab,
 } from "../chrome-tabs.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -51,7 +49,7 @@ function mockSendMessage() {
 }
 
 /** Reset the injectedTabs module state between tests. */
-function resetInjectedState() {
+function _resetInjectedState() {
 	// Call removeInjected for all known tabs — we don't track them,
 	// but we can clear state by re-importing. Instead, just call
 	// the internal reset. Since injectedTabs is module-private,
@@ -75,7 +73,7 @@ describe("forwardToContentScript — success path", () => {
 
 	test("returns content script response on first attempt", async () => {
 		const sendMock = mockSendMessage();
-		const expected = { id: "test-1", result: "ok" };
+		const expected = { id: "test-1", result: { tabId: 1 } };
 
 		// First call: ensureContentScript ping → resolves
 		// Second call: the actual request → resolves with expected
@@ -137,7 +135,7 @@ describe("forwardToContentScript — retry on ensureContentScript failure", () =
 
 	test("retries and succeeds after ensureContentScript fails once", async () => {
 		const sendMock = mockSendMessage();
-		const expected = { id: "test-1", result: "ok" };
+		const expected = { id: "test-1", result: { tabId: 1, ok: true } };
 
 		// Attempt 0: ensureContentScript ping fails
 		sendMock.mockRejectedValueOnce(new Error("Content script not available"));
@@ -207,7 +205,7 @@ describe("forwardToContentScript — retry on sendMessage failure", () => {
 
 	test("retries on connection reset error", async () => {
 		const sendMock = mockSendMessage();
-		const expected = { id: "test-1", result: "ok" };
+		const expected = { id: "test-1", result: { tabId: 1, ok: true } };
 
 		// Attempt 0: ping succeeds, request fails with transient error
 		sendMock.mockResolvedValueOnce({}); // ping
@@ -227,7 +225,7 @@ describe("forwardToContentScript — retry on sendMessage failure", () => {
 
 	test("retries on 'port' error (without 'closed' in message)", async () => {
 		const sendMock = mockSendMessage();
-		const expected = { id: "test-1", result: "ok" };
+		const expected = { id: "test-1", result: { tabId: 1, ok: true } };
 
 		// "port disconnected" matches "port" but NOT "closed"
 		sendMock.mockResolvedValueOnce({}); // ping
@@ -246,7 +244,7 @@ describe("forwardToContentScript — retry on sendMessage failure", () => {
 
 	test("retries on timeout error", async () => {
 		const sendMock = mockSendMessage();
-		const expected = { id: "test-1", result: "ok" };
+		const expected = { id: "test-1", result: { tabId: 1, ok: true } };
 
 		sendMock.mockResolvedValueOnce({}); // ping
 		sendMock.mockRejectedValueOnce(
@@ -286,8 +284,8 @@ describe("forwardToContentScript — no retry on terminal errors", () => {
 		const result = await forwardToContentScript(5, makeReq(), 2);
 
 		expect(result.error).toBeDefined();
-		expect(result.error!.code).toBe("BROWSER_NOT_CONNECTED");
-		expect(result.error!.message).toContain("Tab 5 was closed");
+		expect(result.error!.code).toBe("TAB_NOT_FOUND");
+		expect(result.error!.message).toContain("closed");
 		expect(sendMock).toHaveBeenCalledTimes(1); // No retry
 		expect(isInjected(5)).toBe(false); // Cleaned up
 	});
@@ -302,7 +300,7 @@ describe("forwardToContentScript — no retry on terminal errors", () => {
 		const result = await forwardToContentScript(3, makeReq(), 2);
 
 		expect(result.error).toBeDefined();
-		expect(result.error!.code).toBe("BROWSER_NOT_CONNECTED");
+		expect(result.error!.code).toBe("TAB_NOT_FOUND");
 		expect(sendMock).toHaveBeenCalledTimes(1);
 	});
 

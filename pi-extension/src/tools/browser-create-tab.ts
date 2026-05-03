@@ -131,7 +131,7 @@ export async function browserCreateTab(
 				active,
 			} satisfies CreateTabParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		const e = err as ErrorResponse;
 		const msg = [`Create tab request failed: ${e.message ?? String(err)}`];
 		if (e.suggestion) msg.push(e.suggestion);

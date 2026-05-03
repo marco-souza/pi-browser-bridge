@@ -166,7 +166,7 @@ export async function browserClick(
 				timeout,
 			} satisfies ClickParams,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		const e = err as ErrorResponse;
 		const msg = [`Click request failed: ${e.message ?? String(err)}`];
 		if (e.suggestion) msg.push(e.suggestion);

@@ -9,7 +9,7 @@
  *   issues and exercises the full tool → send → WS → response pipeline.
  */
 
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { start, stop } from "../infrastructure/ws-server.js";
 import { BROWSER_CLICK_SCHEMA, browserClick } from "../tools/browser-click.js";
 import {

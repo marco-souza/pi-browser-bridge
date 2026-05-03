@@ -9,7 +9,7 @@
  * @module smoke-test
  */
 
-import { beforeAll, beforeEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 describe("Vitest + happy-dom smoke tests", () => {
 	describe("DOM globals (happy-dom)", () => {

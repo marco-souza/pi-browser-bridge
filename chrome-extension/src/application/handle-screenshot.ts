@@ -121,7 +121,7 @@ export async function handleScreenshot(
 				...(warning ? { warning } : {}),
 			},
 		};
-	} catch (e) {
+	} catch (e: unknown) {
 		const err = e instanceof Error ? e.message : String(e);
 
 		if (

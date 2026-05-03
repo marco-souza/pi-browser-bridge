@@ -35,7 +35,6 @@ import type {
 // ── Helpers ──────────────────────────────────────────────────────────────
 
 /** Cast any result to a dict for property access in tests. */
-// biome-ignore lint/suspicious/noExplicitAny: test helper
 function asDict(v: any): Record<string, unknown> {
 	return v as Record<string, unknown>;
 }
@@ -359,17 +358,7 @@ describe("handleRead", () => {
 
 	test("supports dependency injection via doc parameter", async () => {
 		// handleRead accepts an optional Document parameter for testing
-		const fakeDoc = {
-			body: {
-				textContent: "injected content",
-				childNodes: [],
-				children: [],
-			},
-			querySelector: () => null,
-		} as unknown as Document;
 
-		// Without a body, returns empty
-		// Actually, let's test with a proper mock
 		const mockBody = document.createElement("div");
 		mockBody.textContent = "Injected Text";
 		const mockDoc = {
@@ -464,7 +453,7 @@ describe("handleScreenshot", () => {
 			"data:image/jpeg;base64,ghi789",
 		);
 
-		const result = await handleScreenshot(
+		await handleScreenshot(
 			"req-6",
 			{ format: "jpeg" },
 			fakeDeps,
@@ -1030,7 +1019,7 @@ describe("Error propagation — domain errors bubble up correctly", () => {
 			try {
 				const result = await fn(params);
 				expect(result).toBeDefined();
-			} catch (e) {
+			} catch (_e) {
 				threw = true;
 			}
 			if (threw) {

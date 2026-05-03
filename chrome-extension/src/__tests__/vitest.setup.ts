@@ -8,7 +8,7 @@
  * @module vitest-setup
  */
 
-import { beforeAll, vi } from "vitest";
+import { beforeAll } from "vitest";
 
 // ── DOM globals (happy-dom) ──────────────────────────────────────────
 

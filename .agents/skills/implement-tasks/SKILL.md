@@ -171,7 +171,7 @@ everything needed to implement the task autonomously.
 > Subagent output goes to `tasks/TASK-XXXX.out`. DONE markers go to
 > `tasks/TASK-XXXX.done`. Everything is versionable.
 
-### Step 5: Spawn tmux Subagents (NEVER implement directly)
+### Step 5: Spawn tmux Subagents in Detached Sessions (NEVER implement directly)
 
 **This skill is a pure orchestrator — it never writes code itself.** Every
 task is delegated to an isolated tmux session running `pi`. Use the shared
@@ -179,10 +179,8 @@ spawn script which handles base64 encoding, prompt files, and wave ordering:
 
 ```bash
 # Spawn next ready wave (auto-detects pending tasks with met dependencies)
+# Returns IMMEDIATELY — sessions run detached in background
 bash .agents/scripts/spawn-wave.sh
-
-# Spawn ALL remaining waves, waiting between each
-bash .agents/scripts/spawn-wave.sh --all
 
 # Spawn specific tasks
 bash .agents/scripts/spawn-wave.sh T001 T003
@@ -192,14 +190,47 @@ bash .agents/scripts/spawn-wave.sh --dry-run
 ```
 
 The script auto-generates prompts if missing, validates tasks.json, and skips
-already-completed tasks (`.done` markers).
+already-completed tasks (`.done` markers). **Each call spawns one wave and
+returns immediately** — the tmux sessions run detached in the background.
 
-For manual status checks:
+> **⚠️ NEVER use `spawn-wave.sh --all` from within an agent session.**
+> The `--all` flag blocks with `sleep` loops waiting for each wave, which
+> will hit the tool timeout (300s). It is intended for humans running from
+> a terminal. Agents must use the async wave-by-wave pattern below.
+
+#### Async Wave-by-Wave Pattern
+
+```bash
+# 1. Spawn first wave (returns immediately)
+bash .agents/scripts/spawn-wave.sh
+
+# 2. Check status — poll until wave completes
+bun .agents/scripts/status-tasks.ts --compact
+
+# 3. When current wave is done, spawn the next wave
+bash .agents/scripts/spawn-wave.sh
+
+# 4. Repeat steps 2-3 until all tasks are done
+```
+
+#### Monitoring
 
 ```bash
 bun .agents/scripts/status-tasks.ts          # full status table
 bun .agents/scripts/status-tasks.ts --compact # one-line summary
 bun .agents/scripts/status-tasks.ts --pending # only pending/blocked
+
+# Peek at a specific task's live output
+tmux capture-pane -t task-T005 -p | tail -20
+```
+
+#### Checking tmux sessions directly
+
+```bash
+tmux ls                                    # list all sessions
+tmux ls | grep "task-"                     # list task sessions only
+tmux kill-session -t task-T005             # kill a specific task session
+tmux kill-session -t task-                 # kill all task sessions
 ```
 
 ### Step 6: Verify Completion
@@ -315,11 +346,12 @@ All 24 criteria across 8 tasks verified.
 - Run integration tests against staging
 ```
 
-## Example: Full Orchestration Run
+## Example: Full Orchestration Run (Async Pattern)
 
 ```bash
 #!/bin/bash
-# Pure orchestrator — validates, generates prompts, spawns subagents, monitors.
+# Pure orchestrator — validates, generates prompts, spawns one wave, exits.
+# The agent polls status and spawns subsequent waves independently.
 # NEVER implements code directly.
 
 set -e
@@ -334,11 +366,14 @@ bun $SCRIPTS/validate-dag.ts "$TASKS_FILE" --summary
 # Step 2: Generate prompt files (auto-validates, includes PRD context)
 bun $SCRIPTS/generate-prompts.ts "$TASKS_FILE"
 
-# Step 3: Launch all waves (auto-resolves dependencies, waits between waves)
-bash $SCRIPTS/spawn-wave.sh --all
+# Step 3: Spawn the first wave (returns immediately — sessions run detached)
+bash $SCRIPTS/spawn-wave.sh
 
-echo "🎉 Orchestration complete"
-bun $SCRIPTS/status-tasks.ts --compact
+# The agent now reports wave status to the user, polls for completion,
+# and spawns subsequent waves as they become available.
+# Each wave is spawned with: bash $SCRIPTS/spawn-wave.sh
+# Status is checked with: bun $SCRIPTS/status-tasks.ts --compact
+echo "📡 First wave spawned. Poll with: bun $SCRIPTS/status-tasks.ts --compact"
 ```
 
 ## Best Practices
@@ -359,6 +394,7 @@ bun $SCRIPTS/status-tasks.ts --compact
 - **Don't embed prompts in shell scripts** — Use Python to write files; avoid heredocs with quotes
 - **Don't skip dependencies** — Tasks built on broken foundations are broken
 - **Don't run everything in parallel** — Respect the DAG; work wave by wave
+- **Don't use `spawn-wave.sh --all`** — It blocks with `sleep` loops and hits tool timeouts. Always spawn one wave at a time and poll for completion
 - **Don't ignore acceptance criteria** — They define "done"
 - **Don't proceed after validation failure** — Fix the tasks.json first
 - **Don't lose track of what's done** — Keep `IMPLEMENTATION_STATUS.md` updated

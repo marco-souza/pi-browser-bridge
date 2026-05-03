@@ -12,67 +12,67 @@
 // ── Errors ─────────────────────────────────────────────────────────────────
 
 export type {
-  ErrorCode,
-  ErrorResponse,
-  ErrorCategory,
+	ErrorCategory,
+	ErrorCode,
+	ErrorResponse,
 } from "./errors.js";
 export {
-  categorizeErrorCode,
-  isRetryable,
-  createTimeoutError,
-  createNotConnectedError,
-  createSendFailedError,
-  createOwnerNotConnectedError,
-  createOwnerUnreachableError,
+	categorizeErrorCode,
+	createNotConnectedError,
+	createOwnerNotConnectedError,
+	createOwnerUnreachableError,
+	createSendFailedError,
+	createTimeoutError,
+	isRetryable,
 } from "./errors.js";
 
 // ── Schemas ────────────────────────────────────────────────────────────────
 
-export {
-  NavigateSchema,
-  ClickSchema,
-  TypeSchema,
-  ScreenshotSchema,
-  ReadSchema,
-  ExecSchema,
-  WaitForElementSchema,
-  WaitForTextSchema,
-} from "./schemas.js";
 export type {
-  ValidatedNavigateParams,
-  ValidatedClickParams,
-  ValidatedTypeParams,
-  ValidatedScreenshotParams,
-  ValidatedReadParams,
-  ValidatedExecParams,
-  ValidatedWaitForElementParams,
-  ValidatedWaitForTextParams,
+	ValidatedClickParams,
+	ValidatedExecParams,
+	ValidatedNavigateParams,
+	ValidatedReadParams,
+	ValidatedScreenshotParams,
+	ValidatedTypeParams,
+	ValidatedWaitForElementParams,
+	ValidatedWaitForTextParams,
+} from "./schemas.js";
+export {
+	ClickSchema,
+	ExecSchema,
+	NavigateSchema,
+	ReadSchema,
+	ScreenshotSchema,
+	TypeSchema,
+	WaitForElementSchema,
+	WaitForTextSchema,
 } from "./schemas.js";
 
 // ── Allowlist ──────────────────────────────────────────────────────────────
 
-export {
-  RESTRICTED_URL_RE,
-  RESTRICTED_SCHEMES,
-  validateUrl,
-  extractHostname,
-  checkDomain,
-} from "./allowlist.js";
 export type {
-  UrlValid,
-  UrlInvalid,
-  UrlValidation,
-  DomainAllowed,
-  DomainBlocked,
-  DomainCheck,
+	DomainAllowed,
+	DomainBlocked,
+	DomainCheck,
+	UrlInvalid,
+	UrlValid,
+	UrlValidation,
+} from "./allowlist.js";
+export {
+	checkDomain,
+	extractHostname,
+	RESTRICTED_SCHEMES,
+	RESTRICTED_URL_RE,
+	validateUrl,
 } from "./allowlist.js";
 
 // ── Ports ──────────────────────────────────────────────────────────────────
 
 export type {
-  BridgeTransport,
-  ServerHandle,
-  ServerLifecycle,
-  AllowlistStore,
-  NotificationSink,
+	AllowlistStore,
+	BridgeTransport,
+	NotificationSink,
+	ServerHandle,
+	ServerLifecycle,
 } from "./ports.js";

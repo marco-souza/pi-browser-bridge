@@ -12,10 +12,10 @@
  */
 
 import type {
-  Action,
-  ErrorResponse,
-  Request,
-  Response,
+	Action,
+	ErrorResponse,
+	Request,
+	Response,
 } from "@pi-browser-bridge/protocol";
 
 // ── Bridge Transport ───────────────────────────────────────────────────────
@@ -29,33 +29,31 @@ import type {
  * - `MockBridge` (tests) — in-memory transport for unit tests.
  */
 export interface BridgeTransport {
-  /**
-   * Send a request to the browser extension and await the matching response.
-   *
-   * The promise rejects with a structured {@link ErrorResponse} on:
-   * - Connection failure (`BROWSER_NOT_CONNECTED`)
-   * - Timeout (`TIMEOUT`)
-   *
-   * @typeParam A — Concrete action literal.
-   */
-  send<A extends Action = Action>(
-    request: Request<A>,
-  ): Promise<Response<A>>;
+	/**
+	 * Send a request to the browser extension and await the matching response.
+	 *
+	 * The promise rejects with a structured {@link ErrorResponse} on:
+	 * - Connection failure (`BROWSER_NOT_CONNECTED`)
+	 * - Timeout (`TIMEOUT`)
+	 *
+	 * @typeParam A — Concrete action literal.
+	 */
+	send<A extends Action = Action>(request: Request<A>): Promise<Response<A>>;
 
-  /**
-   * Subscribe to all incoming responses, including unsolicited events that
-   * do not correspond to a pending request.
-   *
-   * Returns an unsubscribe function.
-   */
-  onResponse(handler: (response: Response) => void): () => void;
+	/**
+	 * Subscribe to all incoming responses, including unsolicited events that
+	 * do not correspond to a pending request.
+	 *
+	 * Returns an unsubscribe function.
+	 */
+	onResponse(handler: (response: Response) => void): () => void;
 }
 
 // ── Server Lifecycle ───────────────────────────────────────────────────────
 
 export interface ServerHandle {
-  /** The port the server is bound to. */
-  readonly port: number;
+	/** The port the server is bound to. */
+	readonly port: number;
 }
 
 /**
@@ -68,21 +66,21 @@ export interface ServerHandle {
  * - `WebSocketServerManager` (infrastructure) — Hono + ws server.
  */
 export interface ServerLifecycle {
-  /**
-   * Start the server on the given port (or default).
-   *
-   * @param port — Override the default port. Pass `0` for OS-assigned port.
-   * @returns A handle with the bound port number.
-   */
-  start(port?: number): Promise<ServerHandle>;
+	/**
+	 * Start the server on the given port (or default).
+	 *
+	 * @param port — Override the default port. Pass `0` for OS-assigned port.
+	 * @returns A handle with the bound port number.
+	 */
+	start(port?: number): Promise<ServerHandle>;
 
-  /**
-   * Gracefully shut down the server.
-   *
-   * All active connections are closed, pending requests are rejected,
-   * and event listeners are cleaned up.
-   */
-  stop(): void;
+	/**
+	 * Gracefully shut down the server.
+	 *
+	 * All active connections are closed, pending requests are rejected,
+	 * and event listeners are cleaned up.
+	 */
+	stop(): void;
 }
 
 // ── Allowlist Store ────────────────────────────────────────────────────────
@@ -98,14 +96,14 @@ export interface ServerLifecycle {
  * - `ExtensionAllowlistStore` (adapter) — reads from Chrome extension storage.
  */
 export interface AllowlistStore {
-  /**
-   * Get the current allowlist.
-   *
-   * - `["*"]` means all domains are allowed.
-   * - A list of domain patterns (e.g. `["example.com", "*.github.com"]`).
-   * - An empty array means nothing is allowed.
-   */
-  getAllowlist(): readonly string[] | Promise<readonly string[]>;
+	/**
+	 * Get the current allowlist.
+	 *
+	 * - `["*"]` means all domains are allowed.
+	 * - A list of domain patterns (e.g. `["example.com", "*.github.com"]`).
+	 * - An empty array means nothing is allowed.
+	 */
+	getAllowlist(): readonly string[] | Promise<readonly string[]>;
 }
 
 // ── Notification Sink ──────────────────────────────────────────────────────
@@ -121,10 +119,10 @@ export interface AllowlistStore {
  * - `ConsoleNotificationSink` (infrastructure) — logs to console.
  */
 export interface NotificationSink {
-  /** Informational message. */
-  info(message: string): void;
-  /** Warning message (non-fatal). */
-  warn(message: string): void;
-  /** Error message (fatal or near-fatal). */
-  error(message: string, err?: unknown): void;
+	/** Informational message. */
+	info(message: string): void;
+	/** Warning message (non-fatal). */
+	warn(message: string): void;
+	/** Error message (fatal or near-fatal). */
+	error(message: string, err?: unknown): void;
 }

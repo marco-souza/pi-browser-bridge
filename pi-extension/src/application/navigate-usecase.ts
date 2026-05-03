@@ -11,11 +11,11 @@
  * @module application/navigate-usecase
  */
 
+import { validateUrl } from "../domain/allowlist.js";
 import type { BridgeTransport } from "../domain/ports.js";
 import type { ValidatedNavigateParams } from "../domain/schemas.js";
-import { validateUrl } from "../domain/allowlist.js";
-import { sendRequest } from "./send-request.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { NavigateResult, UseCaseResult } from "./types.js";
 
 /**
@@ -30,31 +30,31 @@ import type { NavigateResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeNavigateUseCase(
-  transport: BridgeTransport,
-  params: ValidatedNavigateParams,
+	transport: BridgeTransport,
+	params: ValidatedNavigateParams,
 ): Promise<UseCaseResult<NavigateResult>> {
-  // ── Domain validation: URL format and scheme restrictions ───────────
-  const urlCheck = validateUrl(params.url);
-  if (!urlCheck.valid) {
-    return {
-      success: false,
-      error: {
-        code: urlCheck.code,
-        message: urlCheck.message,
-        suggestion: urlCheck.suggestion,
-      },
-    };
-  }
+	// ── Domain validation: URL format and scheme restrictions ───────────
+	const urlCheck = validateUrl(params.url);
+	if (!urlCheck.valid) {
+		return {
+			success: false,
+			error: {
+				code: urlCheck.code,
+				message: urlCheck.message,
+				suggestion: urlCheck.suggestion,
+			},
+		};
+	}
 
-  // ── Build and send request ────────────────────────────────────────
-  const response = await sendRequest(transport, "navigate", {
-    tabId: params.tabId,
-    url: params.url,
-    waitUntil: params.waitUntil,
-    timeout: params.timeout,
-  });
-  if (!response.success) return response;
+	// ── Build and send request ────────────────────────────────────────
+	const response = await sendRequest(transport, "navigate", {
+		tabId: params.tabId,
+		url: params.url,
+		waitUntil: params.waitUntil,
+		timeout: params.timeout,
+	});
+	if (!response.success) return response;
 
-  // ── Extract result ────────────────────────────────────────────────
-  return handleResponse<NavigateResult>(response.data);
+	// ── Extract result ────────────────────────────────────────────────
+	return handleResponse<NavigateResult>(response.data);
 }

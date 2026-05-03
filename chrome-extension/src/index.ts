@@ -6,8 +6,8 @@
  */
 
 export {
-  connect,
-  getActiveTabId,
-  loadPort,
-  savePort,
+	connect,
+	getActiveTabId,
+	loadPort,
+	savePort,
 } from "./background/background.js";

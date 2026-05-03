@@ -11,20 +11,35 @@
  * @module mocks
  */
 
+import {
+	chromeRuntimeMock,
+	installChromeRuntimeMock,
+} from "./chrome-runtime.js";
+import {
+	chromeStorageMock,
+	installChromeStorageMock,
+} from "./chrome-storage.js";
 import { chromeTabsMock, installChromeTabsMock } from "./chrome-tabs.js";
-import { chromeStorageMock, installChromeStorageMock } from "./chrome-storage.js";
-import { chromeRuntimeMock, installChromeRuntimeMock } from "./chrome-runtime.js";
 
 export {
-  createMockWebSocket,
-  mockWebSocketConstructor,
-  type MockWebSocketOptions,
-  type SentMessage,
+	chromeRuntimeMock,
+	installChromeRuntimeMock,
+} from "./chrome-runtime.js";
+export {
+	chromeStorageMock,
+	installChromeStorageMock,
+} from "./chrome-storage.js";
+export {
+	chromeTabsMock,
+	installChromeTabsMock,
+	type MockTab,
+} from "./chrome-tabs.js";
+export {
+	createMockWebSocket,
+	type MockWebSocketOptions,
+	mockWebSocketConstructor,
+	type SentMessage,
 } from "./websocket.js";
-
-export { chromeTabsMock, installChromeTabsMock, type MockTab } from "./chrome-tabs.js";
-export { chromeStorageMock, installChromeStorageMock } from "./chrome-storage.js";
-export { chromeRuntimeMock, installChromeRuntimeMock } from "./chrome-runtime.js";
 
 /**
  * Install all Chrome API mocks on the global `chrome` object.
@@ -41,10 +56,12 @@ export { chromeRuntimeMock, installChromeRuntimeMock } from "./chrome-runtime.js
  * ```
  */
 export function installAllChromeMocks(): void {
-  // Assign mocks to globalThis.chrome for Node test environments.
-  const g = globalThis as Record<string, unknown>;
-  g.chrome = g.chrome ?? {};
-  (g.chrome as Record<string, unknown>).tabs = chromeTabsMock;
-  (g.chrome as Record<string, unknown>).storage = { local: chromeStorageMock };
-  (g.chrome as Record<string, unknown>).runtime = { onMessage: chromeRuntimeMock };
+	// Assign mocks to globalThis.chrome for Node test environments.
+	const g = globalThis as Record<string, unknown>;
+	g.chrome = g.chrome ?? {};
+	(g.chrome as Record<string, unknown>).tabs = chromeTabsMock;
+	(g.chrome as Record<string, unknown>).storage = { local: chromeStorageMock };
+	(g.chrome as Record<string, unknown>).runtime = {
+		onMessage: chromeRuntimeMock,
+	};
 }

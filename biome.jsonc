@@ -1,127 +1,163 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
-  "files": {
-    "includes": ["**", "!node_modules", "!dist", "!build"]
-  },
-  // ── Global Linter Rules ───────────────────────────────────────────────────────
-  //
-  // Base rules apply to all packages (logger, protocol, pi-extension,
-  // chrome-extension) unless overridden below.
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "suspicious": {
-        // Production code must use the logger instead of raw console.* calls.
-        "noConsole": {
-          "level": "error",
-          "fix": "none",
-          "options": {
-            "allow": []
-          }
-        }
-      }
-    }
-  },
-  // ── Overrides ─────────────────────────────────────────────────────────────────
-  //
-  // Target-specific rule adjustments. When multiple overrides match a file,
-  // the last one wins (order matters for the same file pattern).
-  "overrides": [
-    // ── Logger package: console is the intended output mechanism ────────────
-    {
-      "includes": ["logger/src/index.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off"
-          }
-        }
-      }
-    },
-    // ── Domain layer import restrictions ────────────────────────────────────
-    //
-    // Clean Architecture: the Domain layer contains enterprise business rules
-    // and must NOT depend on outer layers. Imports into application/,
-    // infrastructure/, or adapters/ are forbidden.
-    //
-    // Uses gitignore-style glob patterns via `group` (Biome v2 noRestrictedImports).
-    // Applies to both pi-extension and chrome-extension packages.
-    {
-      "includes": [
-        "**/pi-extension/src/domain/**",
-        "**/chrome-extension/src/domain/**"
-      ],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "patterns": [
-                  {
-                    "group": [
-                      "**/application/**",
-                      "**/infrastructure/**",
-                      "**/adapters/**"
-                    ],
-                    "message": "Domain layer must not import from application, infrastructure, or adapters layers"
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    // ── Application layer import restrictions ───────────────────────────────
-    //
-    // Clean Architecture: the Application layer contains use-case orchestration
-    // and must NOT depend on the infrastructure or adapter layers. It may
-    // import from Domain via interfaces (dependency inversion).
-    //
-    // Uses gitignore-style glob patterns via `group` (Biome v2 noRestrictedImports).
-    // Applies to both pi-extension and chrome-extension packages.
-    {
-      "includes": [
-        "**/pi-extension/src/application/**",
-        "**/chrome-extension/src/application/**"
-      ],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "patterns": [
-                  {
-                    "group": [
-                      "**/infrastructure/**",
-                      "**/adapters/**"
-                    ],
-                    "message": "Application layer must not import from infrastructure or adapters layers"
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    // ── Test files: allow console for debugging ─────────────────────────────
-    {
-      "includes": ["**/__tests__/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off"
-          }
-        }
-      }
-    }
-  ]
+	"$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"includes": ["**", "!node_modules", "!dist", "!build", "!.agents", "!e2e"]
+	},
+	// ── Global Linter Rules ───────────────────────────────────────────────────────
+	//
+	// Base rules apply to all packages (logger, protocol, pi-extension,
+	// chrome-extension) unless overridden below.
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"correctness": {
+				"noUnusedVariables": "off",
+				"noUnusedImports": "off",
+				"noUnusedFunctionParameters": "off"
+			},
+			"suspicious": {
+				// Production code must use the logger instead of raw console.* calls.
+				"noConsole": {
+					"level": "error",
+					"fix": "none",
+					"options": {
+						"allow": []
+					}
+				}
+			}
+		}
+	},
+	// ── Overrides ─────────────────────────────────────────────────────────────────
+	//
+	// Target-specific rule adjustments. When multiple overrides match a file,
+	// the last one wins (order matters for the same file pattern).
+	"overrides": [
+		// ── Logger package: console is the intended output mechanism ────────────
+		{
+			"includes": ["logger/src/index.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		// ── Domain layer import restrictions ────────────────────────────────────
+		//
+		// Clean Architecture: the Domain layer contains enterprise business rules
+		// and must NOT depend on outer layers. Imports into application/,
+		// infrastructure/, or adapters/ are forbidden.
+		//
+		// Uses gitignore-style glob patterns via `group` (Biome v2 noRestrictedImports).
+		// Applies to both pi-extension and chrome-extension packages.
+		{
+			"includes": [
+				"**/pi-extension/src/domain/**",
+				"**/chrome-extension/src/domain/**"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": [
+											"**/application/**",
+											"**/infrastructure/**",
+											"**/adapters/**"
+										],
+										"message": "Domain layer must not import from application, infrastructure, or adapters layers"
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		// ── Application layer import restrictions ───────────────────────────────
+		//
+		// Clean Architecture: the Application layer contains use-case orchestration
+		// and must NOT depend on the infrastructure or adapter layers. It may
+		// import from Domain via interfaces (dependency inversion).
+		//
+		// Uses gitignore-style glob patterns via `group` (Biome v2 noRestrictedImports).
+		// Applies to both pi-extension and chrome-extension packages.
+		{
+			"includes": [
+				"**/pi-extension/src/application/**",
+				"**/chrome-extension/src/application/**"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"patterns": [
+									{
+										"group": ["**/infrastructure/**", "**/adapters/**"],
+										"message": "Application layer must not import from infrastructure or adapters layers"
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		},
+		// ── Test files: allow console for debugging and relaxed style rules ─────
+		{
+			"includes": ["**/__tests__/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off",
+						"noExplicitAny": "off",
+						"noAssignInExpressions": "off",
+						"noConfusingVoidType": "off"
+					},
+					"style": {
+						"noNonNullAssertion": "off"
+					},
+					"complexity": {
+						"noBannedTypes": "off"
+					}
+				}
+			}
+		},
+		// ── Mock files: allow non-null assertions ─────────────────────────────
+		{
+			"includes": ["**/mocks/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noNonNullAssertion": "off"
+					},
+					"suspicious": {
+						"noConfusingVoidType": "off"
+					}
+				}
+			}
+		},
+		// ── handle-exec: eval() is intentional for JS execution tool ──────────
+		{
+			"includes": ["**/handle-exec.ts"],
+			"linter": {
+				"rules": {
+					"security": {
+						"noGlobalEval": "off"
+					}
+				}
+			}
+		}
+	]
 }

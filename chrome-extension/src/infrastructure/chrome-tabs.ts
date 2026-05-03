@@ -131,8 +131,9 @@ export async function listTabs(
 	});
 
 	return tabs
-		.filter((tab): tab is chrome.tabs.Tab & { id: number; url: string } =>
-			tab.id !== undefined && tab.url !== undefined,
+		.filter(
+			(tab): tab is chrome.tabs.Tab & { id: number; url: string } =>
+				tab.id !== undefined && tab.url !== undefined,
 		)
 		.map((tab) => ({
 			tabId: tab.id,
@@ -142,9 +143,7 @@ export async function listTabs(
 		}))
 		.filter((tab) => {
 			if (!urlPattern) return true;
-			return (
-				tab.url.includes(urlPattern) || tab.title.includes(urlPattern)
-			);
+			return tab.url.includes(urlPattern) || tab.title.includes(urlPattern);
 		});
 }
 
@@ -252,7 +251,12 @@ export async function forwardToContentScript(
 ): Promise<{
 	id: string;
 	result?: { tabId: number } & Record<string, unknown>;
-	error?: { code: string; message: string; suggestion?: string; tabId?: number };
+	error?: {
+		code: string;
+		message: string;
+		suggestion?: string;
+		tabId?: number;
+	};
 }> {
 	for (let attempt = 0; attempt <= maxRetries; attempt++) {
 		try {
@@ -284,7 +288,12 @@ export async function forwardToContentScript(
 				const resp = response as {
 					id: string;
 					result?: { tabId: number } & Record<string, unknown>;
-					error?: { code: string; message: string; suggestion?: string; tabId?: number };
+					error?: {
+						code: string;
+						message: string;
+						suggestion?: string;
+						tabId?: number;
+					};
 				};
 				// Error responses pass through unchanged.
 				if (resp.error) {
@@ -292,7 +301,10 @@ export async function forwardToContentScript(
 				}
 				// Inject tabId into the result payload.
 				if (resp.result && typeof resp.result === "object") {
-					return { ...resp, result: { tabId, ...(resp.result as Record<string, unknown>) } };
+					return {
+						...resp,
+						result: { tabId, ...(resp.result as Record<string, unknown>) },
+					};
 				}
 				return { ...resp, result: { tabId } };
 			}

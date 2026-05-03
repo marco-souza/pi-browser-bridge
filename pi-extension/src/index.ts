@@ -51,6 +51,11 @@ export {
 	browserClickTool as legacyClickTool,
 } from "./tools/browser-click.js";
 export {
+	BROWSER_CREATE_TAB_SCHEMA,
+	browserCreateTab,
+	browserCreateTabTool as legacyCreateTabTool,
+} from "./tools/browser-create-tab.js";
+export {
 	BROWSER_EXEC_SCHEMA,
 	browserExec,
 	browserExecTool as legacyExecTool,
@@ -85,11 +90,6 @@ export {
 	browserWaitForText,
 	browserWaitForTextTool as legacyWaitForTextTool,
 } from "./tools/browser-wait-for-text.js";
-export {
-	BROWSER_CREATE_TAB_SCHEMA,
-	browserCreateTab,
-	browserCreateTabTool as legacyCreateTabTool,
-} from "./tools/browser-create-tab.js";
 
 // ── Server facades (backward-compatible) ───────────────────────────────
 

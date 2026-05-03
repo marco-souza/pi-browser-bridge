@@ -14,9 +14,9 @@ import type { WaitForTextActionResult } from "./types.js";
 
 /** Parameters expected by the waitForText handler. */
 interface WaitForTextParams {
-  text: string;
-  scope?: string;
-  timeout?: number;
+	text: string;
+	scope?: string;
+	timeout?: number;
 }
 
 /**
@@ -30,44 +30,44 @@ interface WaitForTextParams {
  *   or a {@link WaitForTextError} with a TIMEOUT code on failure.
  */
 export async function handleWaitForText(
-  params: unknown,
+	params: unknown,
 ): Promise<WaitForTextActionResult> {
-  const p = params as WaitForTextParams | null | undefined;
-  const text = p?.text;
-  const scope =
-    typeof p?.scope === "string" && p.scope.length > 0 ? p.scope : undefined;
-  const timeout =
-    typeof p?.timeout === "number" &&
-    Number.isFinite(p.timeout) &&
-    p.timeout > 0
-      ? p.timeout
-      : 10000;
+	const p = params as WaitForTextParams | null | undefined;
+	const text = p?.text;
+	const scope =
+		typeof p?.scope === "string" && p.scope.length > 0 ? p.scope : undefined;
+	const timeout =
+		typeof p?.timeout === "number" &&
+		Number.isFinite(p.timeout) &&
+		p.timeout > 0
+			? p.timeout
+			: 10000;
 
-  if (typeof text !== "string" || text.length === 0) {
-    return {
-      found: false,
-      elapsedMs: 0,
-      text: String(text ?? ""),
-      error: "TIMEOUT",
-      message: "Missing required parameter: text (non-empty string).",
-    };
-  }
+	if (typeof text !== "string" || text.length === 0) {
+		return {
+			found: false,
+			elapsedMs: 0,
+			text: String(text ?? ""),
+			error: "TIMEOUT",
+			message: "Missing required parameter: text (non-empty string).",
+		};
+	}
 
-  try {
-    const result = await waitForText(text, scope, timeout);
-    return {
-      found: true,
-      elapsedMs: result.elapsedMs,
-      text,
-    };
-  } catch {
-    const scopeLabel = scope ? ` within "${scope}"` : "";
-    return {
-      found: false,
-      elapsedMs: timeout,
-      text,
-      error: "TIMEOUT",
-      message: `Text "${text}" not found${scopeLabel} within ${timeout}ms.`,
-    };
-  }
+	try {
+		const result = await waitForText(text, scope, timeout);
+		return {
+			found: true,
+			elapsedMs: result.elapsedMs,
+			text,
+		};
+	} catch {
+		const scopeLabel = scope ? ` within "${scope}"` : "";
+		return {
+			found: false,
+			elapsedMs: timeout,
+			text,
+			error: "TIMEOUT",
+			message: `Text "${text}" not found${scopeLabel} within ${timeout}ms.`,
+		};
+	}
 }

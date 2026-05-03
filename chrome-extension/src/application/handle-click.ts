@@ -24,8 +24,6 @@ import type { ClickResult } from "./types.js";
  *   with a machine-readable error code and (for not-found errors) a list of
  *   matching element text suggestions.
  */
-export async function handleClick(
-  params: unknown,
-): Promise<ClickResult> {
-  return (await clickHandler(params)) as ClickResult;
+export async function handleClick(params: unknown): Promise<ClickResult> {
+	return (await clickHandler(params)) as ClickResult;
 }

@@ -11,9 +11,9 @@ import { vi } from "vitest";
 // ── Types ─────────────────────────────────────────────────────────────
 
 type MessageListener = (
-  message: unknown,
-  sender: chrome.runtime.MessageSender,
-  sendResponse: (response?: unknown) => void,
+	message: unknown,
+	sender: chrome.runtime.MessageSender,
+	sendResponse: (response?: unknown) => void,
 ) => boolean | undefined | void;
 
 // ── State ─────────────────────────────────────────────────────────────
@@ -39,69 +39,69 @@ let listeners: MessageListener[] = [];
  * ```
  */
 export const chromeRuntimeMock = {
-  // ── Listener management ───────────────────────────────────────────
+	// ── Listener management ───────────────────────────────────────────
 
-  addListener: vi.fn((listener: MessageListener) => {
-    listeners.push(listener);
-  }),
+	addListener: vi.fn((listener: MessageListener) => {
+		listeners.push(listener);
+	}),
 
-  removeListener: vi.fn((listener: MessageListener) => {
-    listeners = listeners.filter((l) => l !== listener);
-  }),
+	removeListener: vi.fn((listener: MessageListener) => {
+		listeners = listeners.filter((l) => l !== listener);
+	}),
 
-  hasListeners: vi.fn(() => listeners.length > 0),
+	hasListeners: vi.fn(() => listeners.length > 0),
 
-  hasListener: vi.fn((listener: MessageListener) => {
-    return listeners.includes(listener);
-  }),
+	hasListener: vi.fn((listener: MessageListener) => {
+		return listeners.includes(listener);
+	}),
 
-  // ── Message simulation ────────────────────────────────────────────
+	// ── Message simulation ────────────────────────────────────────────
 
-  /**
-   * Simulate a message arriving from a content script or background.
-   * Calls all registered listeners with the given message.
-   *
-   * @returns Array of sendResponse callbacks (if listener returned true).
-   */
-  simulateMessage(
-    message: unknown,
-    sender: Partial<chrome.runtime.MessageSender> = {},
-  ): Array<(response?: unknown) => void> | null {
-    const sendResponseCallbacks: Array<(response?: unknown) => void> = [];
-    const fullSender: chrome.runtime.MessageSender = {
-      id: sender.id ?? "mock-extension-id",
-      url: sender.url,
-      origin: sender.origin,
-      tab: sender.tab,
-      tlsChannelId: sender.tlsChannelId,
-      frameId: sender.frameId,
-      documentId: sender.documentId,
-      documentLifecycle: sender.documentLifecycle,
-    };
+	/**
+	 * Simulate a message arriving from a content script or background.
+	 * Calls all registered listeners with the given message.
+	 *
+	 * @returns Array of sendResponse callbacks (if listener returned true).
+	 */
+	simulateMessage(
+		message: unknown,
+		sender: Partial<chrome.runtime.MessageSender> = {},
+	): Array<(response?: unknown) => void> | null {
+		const sendResponseCallbacks: Array<(response?: unknown) => void> = [];
+		const fullSender: chrome.runtime.MessageSender = {
+			id: sender.id ?? "mock-extension-id",
+			url: sender.url,
+			origin: sender.origin,
+			tab: sender.tab,
+			tlsChannelId: sender.tlsChannelId,
+			frameId: sender.frameId,
+			documentId: sender.documentId,
+			documentLifecycle: sender.documentLifecycle,
+		};
 
-    for (const listener of listeners) {
-      let asyncResponse = false;
-      const sendResponse = (response?: unknown) => {
-        sendResponseCallbacks.push(() => response);
-      };
-      const result = listener(message, fullSender, sendResponse);
-      if (result === true) {
-        asyncResponse = true;
-      }
-    }
+		for (const listener of listeners) {
+			let asyncResponse = false;
+			const sendResponse = (response?: unknown) => {
+				sendResponseCallbacks.push(() => response);
+			};
+			const result = listener(message, fullSender, sendResponse);
+			if (result === true) {
+				asyncResponse = true;
+			}
+		}
 
-    return sendResponseCallbacks.length > 0 ? sendResponseCallbacks : null;
-  },
+		return sendResponseCallbacks.length > 0 ? sendResponseCallbacks : null;
+	},
 
-  /** Reset all listeners and state. */
-  reset(): void {
-    listeners = [];
-  },
+	/** Reset all listeners and state. */
+	reset(): void {
+		listeners = [];
+	},
 
-  /** Get current listener count. */
-  getListenerCount(): number {
-    return listeners.length;
-  },
+	/** Get current listener count. */
+	getListenerCount(): number {
+		return listeners.length;
+	},
 };
 
 /**
@@ -109,8 +109,10 @@ export const chromeRuntimeMock = {
  * Call in beforeAll to make chrome.runtime.onMessage available to tested code.
  */
 export function installChromeRuntimeMock(): void {
-  // Assign mock to globalThis.chrome.runtime.onMessage for Node test environments.
-  const g = globalThis as Record<string, unknown>;
-  g.chrome = g.chrome ?? {};
-  (g.chrome as Record<string, unknown>).runtime = { onMessage: chromeRuntimeMock };
+	// Assign mock to globalThis.chrome.runtime.onMessage for Node test environments.
+	const g = globalThis as Record<string, unknown>;
+	g.chrome = g.chrome ?? {};
+	(g.chrome as Record<string, unknown>).runtime = {
+		onMessage: chromeRuntimeMock,
+	};
 }

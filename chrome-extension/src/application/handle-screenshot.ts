@@ -14,8 +14,8 @@
 import type { Response } from "@pi-browser-bridge/protocol";
 import {
 	isRestrictedUrl,
-	validateScreenshotParams,
 	type ScreenshotValidationError,
+	validateScreenshotParams,
 } from "../domain/screenshot.js";
 
 // ── Dependency injection interface ──────────────────────────────────────

@@ -7,10 +7,15 @@
  * @module domain/__tests__/interactions.test
  */
 
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { clickHandler, typeHandler } from "../interactions.js";
 import type { TypeParams } from "@pi-browser-bridge/protocol";
-import type { ClickSuccess, ClickError, TypeSuccess, TypeErrorResult } from "../interactions.js";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import type {
+	ClickError,
+	ClickSuccess,
+	TypeErrorResult,
+	TypeSuccess,
+} from "../interactions.js";
+import { clickHandler, typeHandler } from "../interactions.js";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -71,8 +76,7 @@ describe("clickHandler", () => {
 		});
 
 		test("includes element text in result", async () => {
-			document.body.innerHTML =
-				'<button class="action">Submit Form</button>';
+			document.body.innerHTML = '<button class="action">Submit Form</button>';
 			const el = document.querySelector(".action")!;
 			mockClickableRect(el);
 
@@ -106,7 +110,7 @@ describe("clickHandler", () => {
 
 		test("returns ELEMENT_NOT_FOUND with text filter suggestions", async () => {
 			document.body.innerHTML =
-				'<button>Alpha</button><button>Beta</button><button>Gamma</button>';
+				"<button>Alpha</button><button>Beta</button><button>Gamma</button>";
 			const promise = clickHandler({
 				selector: "button",
 				text: "Zeta",
@@ -337,15 +341,12 @@ describe("typeHandler", () => {
 			expect(s.typed).toBe(true);
 			expect(s.value).toBe("Multi-line\ncontent");
 
-			const textarea = document.querySelector(
-				"#bio",
-			) as HTMLTextAreaElement;
+			const textarea = document.querySelector("#bio") as HTMLTextAreaElement;
 			expect(textarea.value).toBe("Multi-line\ncontent");
 		});
 
 		test("clears textarea before typing", async () => {
-			document.body.innerHTML =
-				"<textarea id=\"notes\">old notes</textarea>";
+			document.body.innerHTML = '<textarea id="notes">old notes</textarea>';
 			const params: TypeParams = {
 				selector: "#notes",
 				text: "fresh notes",
@@ -466,9 +467,7 @@ describe("typeHandler", () => {
 			expect(s.typed).toBe(true);
 			expect(s.value).toBe("TA value");
 
-			const textarea = document.querySelector(
-				"#ta",
-			) as HTMLTextAreaElement;
+			const textarea = document.querySelector("#ta") as HTMLTextAreaElement;
 			expect(textarea.value).toBe("TA value");
 		});
 
@@ -477,9 +476,7 @@ describe("typeHandler", () => {
 			// Verify that setNativeValue reads from the prototype and calls
 			// the setter, meaning React's patched setter would be invoked.
 			document.body.innerHTML = '<input id="react-inp" type="text" />';
-			const input = document.getElementById(
-				"react-inp",
-			) as HTMLInputElement;
+			const input = document.getElementById("react-inp") as HTMLInputElement;
 
 			const { setNativeValue } = await import("../dom.js");
 

@@ -24,8 +24,6 @@ import type { TypeActionResult } from "./types.js";
  *   with a machine-readable error code, the element tag, and (for not-found
  *   errors) actionable suggestions listing typable elements on the page.
  */
-export async function handleType(
-  params: unknown,
-): Promise<TypeActionResult> {
-  return (await typeHandler(params)) as TypeActionResult;
+export async function handleType(params: unknown): Promise<TypeActionResult> {
+	return (await typeHandler(params)) as TypeActionResult;
 }

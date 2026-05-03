@@ -64,9 +64,7 @@ describe("waitForElement", () => {
 
 	test("rejects on invalid CSS selector", async () => {
 		// happy-dom's querySelector throws DOMException on malformed selectors.
-		await expect(
-			waitForElement("[invalid", 5000),
-		).rejects.toThrow();
+		await expect(waitForElement("[invalid", 5000)).rejects.toThrow();
 	});
 
 	test("rejects on empty selector", async () => {
@@ -119,9 +117,9 @@ describe("waitForText", () => {
 
 	test("is case-sensitive — 'Hello' does not match 'hello'", async () => {
 		document.body.innerHTML = "<p>hello world</p>";
-		await expect(
-			waitForText("Hello", undefined, 200),
-		).rejects.toThrow("TIMEOUT");
+		await expect(waitForText("Hello", undefined, 200)).rejects.toThrow(
+			"TIMEOUT",
+		);
 	});
 
 	test("matches exact case", async () => {
@@ -130,9 +128,9 @@ describe("waitForText", () => {
 		const result = await waitForText("WORLD", undefined, 1000);
 		expect(result.found).toBe(true);
 		// "world" lowercase should NOT match
-		await expect(
-			waitForText("world", undefined, 200),
-		).rejects.toThrow("TIMEOUT");
+		await expect(waitForText("world", undefined, 200)).rejects.toThrow(
+			"TIMEOUT",
+		);
 	});
 });
 
@@ -564,8 +562,9 @@ describe("collectTypableSuggestions", () => {
 	});
 
 	test("caps at 10 elements", () => {
-		const inputs = Array.from({ length: 15 }, (_, i) =>
-			`<input type="text" id="inp${i}" />`,
+		const inputs = Array.from(
+			{ length: 15 },
+			(_, i) => `<input type="text" id="inp${i}" />`,
 		).join("");
 		document.body.innerHTML = inputs;
 		const suggestions = collectTypableSuggestions();
@@ -581,13 +580,13 @@ describe("collectTypableSuggestions", () => {
 	});
 });
 
-	describe("extractText — edge cases", () => {
-		beforeEach(() => {
-			document.body.innerHTML = "";
-		});
+describe("extractText — edge cases", () => {
+	beforeEach(() => {
+		document.body.innerHTML = "";
+	});
 
-		test("renders select elements with selected option", () => {
-			document.body.innerHTML = `
+	test("renders select elements with selected option", () => {
+		document.body.innerHTML = `
 				<label for="country">Country</label>
 				<select id="country">
 					<option>USA</option>
@@ -595,118 +594,114 @@ describe("collectTypableSuggestions", () => {
 					<option>Mexico</option>
 				</select>
 			`;
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("Country");
-			expect(result.text).toContain("Canada");
-		});
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("Country");
+		expect(result.text).toContain("Canada");
+	});
 
-		test("renders radio buttons", () => {
-			document.body.innerHTML = `
+	test("renders radio buttons", () => {
+		document.body.innerHTML = `
 				<input type="radio" name="color" value="red" checked />
 				<input type="radio" name="color" value="blue" />
 			`;
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("checked");
-			expect(result.text).toContain("unchecked");
-		});
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("checked");
+		expect(result.text).toContain("unchecked");
+	});
 
-		test("renders <hr> as separator", () => {
-			document.body.innerHTML = "<p>above</p><hr /><p>below</p>";
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("---");
-			expect(result.text).toContain("above");
-			expect(result.text).toContain("below");
-		});
+	test("renders <hr> as separator", () => {
+		document.body.innerHTML = "<p>above</p><hr /><p>below</p>";
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("---");
+		expect(result.text).toContain("above");
+		expect(result.text).toContain("below");
+	});
 
-		test("renders <br> as line break", () => {
-			document.body.innerHTML = "line one<br>line two";
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("line one");
-			expect(result.text).toContain("line two");
-		});
+	test("renders <br> as line break", () => {
+		document.body.innerHTML = "line one<br>line two";
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("line one");
+		expect(result.text).toContain("line two");
+	});
 
-		test("handles link with block child (e.g. card-style link)", () => {
-			document.body.innerHTML = `
+	test("handles link with block child (e.g. card-style link)", () => {
+		document.body.innerHTML = `
 				<a href="https://example.com">
 					<h3>Card Title</h3>
 					<p>Card description text.</p>
 				</a>
 			`;
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("Card Title");
-			expect(result.text).toContain("Card description text");
-			expect(result.text).toContain("[https://example.com]");
-		});
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("Card Title");
+		expect(result.text).toContain("Card description text");
+		expect(result.text).toContain("[https://example.com]");
+	});
 
-		test("skips HTML comments", () => {
-			document.body.innerHTML =
-				"<p>visible</p><!-- this is a comment --><p>also visible</p>";
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("visible");
-			expect(result.text).toContain("also visible");
-			expect(result.text).not.toContain("this is a comment");
-		});
+	test("skips HTML comments", () => {
+		document.body.innerHTML =
+			"<p>visible</p><!-- this is a comment --><p>also visible</p>";
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("visible");
+		expect(result.text).toContain("also visible");
+		expect(result.text).not.toContain("this is a comment");
+	});
 
-		test("handles submit button input", () => {
-			document.body.innerHTML =
-				'<input type="submit" value="Send" />';
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("[Button: Send]");
-		});
+	test("handles submit button input", () => {
+		document.body.innerHTML = '<input type="submit" value="Send" />';
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("[Button: Send]");
+	});
 
-		test("handles reset button input", () => {
-			document.body.innerHTML =
-				'<input type="reset" value="Clear" />';
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("[Button: Clear]");
-		});
+	test("handles reset button input", () => {
+		document.body.innerHTML = '<input type="reset" value="Clear" />';
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("[Button: Clear]");
+	});
 
-		test("handles aria-label on container element", () => {
-			document.body.innerHTML =
-				'<div aria-label="Navigation menu"><a href="/">Home</a></div>';
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("[Navigation menu]");
-			expect(result.text).toContain("Home");
-		});
+	test("handles aria-label on container element", () => {
+		document.body.innerHTML =
+			'<div aria-label="Navigation menu"><a href="/">Home</a></div>';
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("[Navigation menu]");
+		expect(result.text).toContain("Home");
+	});
 
-		test("handles input with value but no label", () => {
-			document.body.innerHTML =
-				'<input type="text" value="prefilled" />';
-			const result = extractText(document.body, 1000);
-			// Should render the value
-			expect(result.text).toContain('value="prefilled"');
-		});
+	test("handles input with value but no label", () => {
+		document.body.innerHTML = '<input type="text" value="prefilled" />';
+		const result = extractText(document.body, 1000);
+		// Should render the value
+		expect(result.text).toContain('value="prefilled"');
+	});
 
-		test("handles textarea with value and label", () => {
-			document.body.innerHTML = `
+	test("handles textarea with value and label", () => {
+		document.body.innerHTML = `
 				<label for="notes">Notes</label>
 				<textarea id="notes" placeholder="Enter notes...">existing text</textarea>
 			`;
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("Notes");
-			expect(result.text).toContain("existing text");
-		});
-
-		test("handles hidden input type", () => {
-			document.body.innerHTML = '<input type="hidden" value="secret" />';
-			const result = extractText(document.body, 1000);
-			expect(result.text).not.toContain("secret");
-		});
-
-		test("handles input with name as label fallback", () => {
-			document.body.innerHTML =
-				'<input type="text" name="username" />';
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("username");
-		});
-
-		test("handles aria-hidden elements are skipped", () => {
-			document.body.innerHTML =
-				'<p>visible</p><p aria-hidden="true">hidden from extract</p>';
-			const result = extractText(document.body, 1000);
-			expect(result.text).toContain("visible");
-			// aria-hidden elements may or may not be skipped depending on
-			// how isHidden works — extractText calls isHidden which only
-			// checks computed style, not aria-hidden.
-		});
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("Notes");
+		expect(result.text).toContain("existing text");
 	});
+
+	test("handles hidden input type", () => {
+		document.body.innerHTML = '<input type="hidden" value="secret" />';
+		const result = extractText(document.body, 1000);
+		expect(result.text).not.toContain("secret");
+	});
+
+	test("handles input with name as label fallback", () => {
+		document.body.innerHTML = '<input type="text" name="username" />';
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("username");
+	});
+
+	test("handles aria-hidden elements are skipped", () => {
+		document.body.innerHTML =
+			'<p>visible</p><p aria-hidden="true">hidden from extract</p>';
+		const result = extractText(document.body, 1000);
+		expect(result.text).toContain("visible");
+		// aria-hidden elements may or may not be skipped depending on
+		// how isHidden works — extractText calls isHidden which only
+		// checks computed style, not aria-hidden.
+	});
+});

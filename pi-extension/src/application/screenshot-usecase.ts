@@ -10,8 +10,8 @@
 
 import type { BridgeTransport } from "../domain/ports.js";
 import type { ValidatedScreenshotParams } from "../domain/schemas.js";
-import { sendRequest } from "./send-request.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { ScreenshotResult, UseCaseResult } from "./types.js";
 
 /**
@@ -26,16 +26,16 @@ import type { ScreenshotResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeScreenshotUseCase(
-  transport: BridgeTransport,
-  params: ValidatedScreenshotParams,
+	transport: BridgeTransport,
+	params: ValidatedScreenshotParams,
 ): Promise<UseCaseResult<ScreenshotResult>> {
-  const response = await sendRequest(transport, "screenshot", {
-    tabId: params.tabId,
-    format: params.format,
-    quality: params.quality,
-    fullPage: params.fullPage,
-  });
-  if (!response.success) return response;
+	const response = await sendRequest(transport, "screenshot", {
+		tabId: params.tabId,
+		format: params.format,
+		quality: params.quality,
+		fullPage: params.fullPage,
+	});
+	if (!response.success) return response;
 
-  return handleResponse<ScreenshotResult>(response.data);
+	return handleResponse<ScreenshotResult>(response.data);
 }

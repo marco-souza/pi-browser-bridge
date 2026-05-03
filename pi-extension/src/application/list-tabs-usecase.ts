@@ -9,10 +9,10 @@
  * @module application/list-tabs-usecase
  */
 
-import type { ValidatedListTabsParams } from "../domain/schemas.js";
 import type { BridgeTransport } from "../domain/ports.js";
-import { sendRequest } from "./send-request.js";
+import type { ValidatedListTabsParams } from "../domain/schemas.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { ListTabsResult, UseCaseResult } from "./types.js";
 
 /**
@@ -24,16 +24,16 @@ import type { ListTabsResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeListTabsUseCase(
-  transport: BridgeTransport,
-  params: ValidatedListTabsParams,
+	transport: BridgeTransport,
+	params: ValidatedListTabsParams,
 ): Promise<UseCaseResult<ListTabsResult>> {
-  // ── Build and send request ────────────────────────────────────────
-  const response = await sendRequest(transport, "listTabs", {
-    urlPattern: params.urlPattern,
-    currentWindowOnly: params.currentWindowOnly,
-  });
-  if (!response.success) return response;
+	// ── Build and send request ────────────────────────────────────────
+	const response = await sendRequest(transport, "listTabs", {
+		urlPattern: params.urlPattern,
+		currentWindowOnly: params.currentWindowOnly,
+	});
+	if (!response.success) return response;
 
-  // ── Extract result ────────────────────────────────────────────────
-  return handleResponse<ListTabsResult>(response.data);
+	// ── Extract result ────────────────────────────────────────────────
+	return handleResponse<ListTabsResult>(response.data);
 }

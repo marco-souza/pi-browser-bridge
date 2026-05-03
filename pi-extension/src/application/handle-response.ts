@@ -27,11 +27,9 @@ import type { UseCaseResult } from "./types.js";
  *   any other source that produces protocol-compliant responses).
  * @returns A discriminated union. Check `.success` to branch.
  */
-export function handleResponse<T>(
-  response: Response,
-): UseCaseResult<T> {
-  if (response.error) {
-    return { success: false, error: response.error };
-  }
-  return { success: true, data: response.result as T };
+export function handleResponse<T>(response: Response): UseCaseResult<T> {
+	if (response.error) {
+		return { success: false, error: response.error };
+	}
+	return { success: true, data: response.result as T };
 }

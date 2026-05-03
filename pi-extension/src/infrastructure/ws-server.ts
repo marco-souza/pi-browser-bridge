@@ -19,13 +19,10 @@
  * @module infrastructure/ws-server
  */
 
-import { Hono } from "hono";
 import { serve, upgradeWebSocket } from "@hono/node-server";
-import {
-  WebSocketServer,
-  type WebSocket,
-} from "ws";
 import { createLogger } from "@pi-browser-bridge/logger";
+import { Hono } from "hono";
+import { type WebSocket, WebSocketServer } from "ws";
 
 import type { ServerHandle } from "../domain/ports.js";
 
@@ -33,39 +30,38 @@ import type { ServerHandle } from "../domain/ports.js";
 
 /** Internal handle with a `_stop` method for lifecycle management. */
 interface InternalServerHandle extends ServerHandle {
-  /** @internal Stop the server (prefer the public {@link stop} function). */
-  _stop: () => void;
+	/** @internal Stop the server (prefer the public {@link stop} function). */
+	_stop: () => void;
 }
 
 import {
-  addWsConnection,
-  removeWsConnection,
-  getWsConnectionCount,
-  getAnyConnection,
-  closeAllWsConnections,
-  rejectAllPending,
-  clearResponseHandlers,
-  clearRelayState,
-  handleMessage,
-  handleClientMessage,
-  cleanupClientRequests,
-  assignClientSequence,
-  removeClientSequence,
-  send,
-  onResponse,
-} from "./ws-transport.js";
-
-import {
-  getClientSocket,
-  setClientSocket,
-  getClientSequenceNumber,
-  setClientSequenceNumber,
-  isShuttingDown,
-  setShuttingDown,
-  setReconnectPort,
-  tryConnectAsClient,
-  closeClientSocket,
+	closeClientSocket,
+	getClientSequenceNumber,
+	getClientSocket,
+	isShuttingDown,
+	setClientSequenceNumber,
+	setClientSocket,
+	setReconnectPort,
+	setShuttingDown,
+	tryConnectAsClient,
 } from "./ws-failover.js";
+import {
+	addWsConnection,
+	assignClientSequence,
+	cleanupClientRequests,
+	clearRelayState,
+	clearResponseHandlers,
+	closeAllWsConnections,
+	getAnyConnection,
+	getWsConnectionCount,
+	handleClientMessage,
+	handleMessage,
+	onResponse,
+	rejectAllPending,
+	removeClientSequence,
+	removeWsConnection,
+	send,
+} from "./ws-transport.js";
 
 const logger = createLogger("pi-bridge:server");
 
@@ -85,71 +81,67 @@ const app = new Hono();
 
 // / — Chrome extension connection (owner receives)
 app.get(
-  "/",
-  upgradeWebSocket(() => ({
-    onOpen(_event, ws) {
-      const raw = ws.raw as WebSocket;
-      addWsConnection(raw);
-      logger.info("Chrome extension connected");
-    },
-    onMessage(event, _ws) {
-      handleMessage(event.data as string);
-    },
-    onClose(_event, ws) {
-      const raw = ws.raw as WebSocket;
-      removeWsConnection(raw);
-      logger.info("Chrome extension disconnected");
-      if (getWsConnectionCount() === 0) {
-        rejectAllPending();
-      }
-    },
-    onError(error, _ws) {
-      logger.error("WebSocket error:", error);
-    },
-  })),
+	"/",
+	upgradeWebSocket(() => ({
+		onOpen(_event, ws) {
+			const raw = ws.raw as WebSocket;
+			addWsConnection(raw);
+			logger.info("Chrome extension connected");
+		},
+		onMessage(event, _ws) {
+			handleMessage(event.data as string);
+		},
+		onClose(_event, ws) {
+			const raw = ws.raw as WebSocket;
+			removeWsConnection(raw);
+			logger.info("Chrome extension disconnected");
+			if (getWsConnectionCount() === 0) {
+				rejectAllPending();
+			}
+		},
+		onError(error, _ws) {
+			logger.error("WebSocket error:", error);
+		},
+	})),
 );
 
 // /client — pi client connections (owner receives)
 app.get(
-  "/client",
-  upgradeWebSocket(() => ({
-    onOpen(_event, ws) {
-      const raw = ws.raw as WebSocket;
-      const seq = assignClientSequence(raw);
+	"/client",
+	upgradeWebSocket(() => ({
+		onOpen(_event, ws) {
+			const raw = ws.raw as WebSocket;
+			const seq = assignClientSequence(raw);
 
-      // Send welcome with sequence number so the client knows its
-      // failover priority.
-      try {
-        raw.send(JSON.stringify({ type: "welcome", sequence: seq }));
-      } catch {
-        // Client may have closed before we could send — ignore
-      }
+			// Send welcome with sequence number so the client knows its
+			// failover priority.
+			try {
+				raw.send(JSON.stringify({ type: "welcome", sequence: seq }));
+			} catch {
+				// Client may have closed before we could send — ignore
+			}
 
-      logger.info(`Pi client connected (sequence ${seq})`);
-    },
-    onMessage(event, ws) {
-      const raw = ws.raw as WebSocket;
-      handleClientMessage(event.data as string, raw, getAnyConnection);
-    },
-    onClose(_event, ws) {
-      const raw = ws.raw as WebSocket;
-      const seq = removeClientSequence(raw);
-      logger.info(`Pi client disconnected (sequence ${seq ?? "?"})`);
-      cleanupClientRequests(raw);
-    },
-    onError(error, _ws) {
-      logger.error("Client WebSocket error:", error);
-    },
-  })),
+			logger.info(`Pi client connected (sequence ${seq})`);
+		},
+		onMessage(event, ws) {
+			const raw = ws.raw as WebSocket;
+			handleClientMessage(event.data as string, raw, getAnyConnection);
+		},
+		onClose(_event, ws) {
+			const raw = ws.raw as WebSocket;
+			const seq = removeClientSequence(raw);
+			logger.info(`Pi client disconnected (sequence ${seq ?? "?"})`);
+			cleanupClientRequests(raw);
+		},
+		onError(error, _ws) {
+			logger.error("Client WebSocket error:", error);
+		},
+	})),
 );
 
 // Fallback HTTP response for non-WebSocket requests on both routes
-app.get("/", (c) =>
-  c.text("Pi Browser Bridge — WebSocket server", 200),
-);
-app.get("/client", (c) =>
-  c.text("Pi Browser Bridge — client endpoint", 200),
-);
+app.get("/", (c) => c.text("Pi Browser Bridge — WebSocket server", 200));
+app.get("/client", (c) => c.text("Pi Browser Bridge — client endpoint", 200));
 
 // ── Schedule reconnection (failover orchestration) ─────────────────────────
 
@@ -167,49 +159,47 @@ app.get("/client", (c) =>
  * via `tryConnectAsClient` and reconnect as clients instead.
  */
 function scheduleReconnect(port: number): void {
-  if (isShuttingDown()) return;
-  if (reconnectTimer) clearTimeout(reconnectTimer);
+	if (isShuttingDown()) return;
+	if (reconnectTimer) clearTimeout(reconnectTimer);
 
-  const seq = getClientSequenceNumber();
-  const delay = Math.max(0, seq) * 300;
+	const seq = getClientSequenceNumber();
+	const delay = Math.max(0, seq) * 300;
 
-  logger.info(
-    `Failover scheduled in ${delay}ms ` + `(sequence ${seq})`,
-  );
+	logger.info(`Failover scheduled in ${delay}ms ` + `(sequence ${seq})`);
 
-  reconnectTimer = setTimeout(async () => {
-    reconnectTimer = null;
-    if (isShuttingDown()) return;
+	reconnectTimer = setTimeout(async () => {
+		reconnectTimer = null;
+		if (isShuttingDown()) return;
 
-    logger.info("Attempting to take over as owner...");
+		logger.info("Attempting to take over as owner...");
 
-    // Try client mode first — maybe an earlier client already became owner
-    const result = await tryConnectAsClient(port, handleMessage);
-    if (result) {
-      setClientSocket(result.ws);
+		// Try client mode first — maybe an earlier client already became owner
+		const result = await tryConnectAsClient(port, handleMessage);
+		if (result) {
+			setClientSocket(result.ws);
 
-      // Attach close handler for failover
-      result.ws.on("close", () => {
-        setClientSocket(null);
-        if (!isShuttingDown()) {
-          logger.warn(
-            "Lost connection to owner server — will attempt failover",
-          );
-          rejectAllPending();
-          scheduleReconnect(port);
-        } else {
-          logger.info("Client disconnected (shutting down)");
-        }
-      });
+			// Attach close handler for failover
+			result.ws.on("close", () => {
+				setClientSocket(null);
+				if (!isShuttingDown()) {
+					logger.warn(
+						"Lost connection to owner server — will attempt failover",
+					);
+					rejectAllPending();
+					scheduleReconnect(port);
+				} else {
+					logger.info("Client disconnected (shutting down)");
+				}
+			});
 
-      logger.info("Another client became owner — reconnected as client");
-      return;
-    }
+			logger.info("Another client became owner — reconnected as client");
+			return;
+		}
 
-    // No server running — become the owner
-    logger.info("No owner found, taking over as owner...");
-    startAsOwner(port);
-  }, delay);
+		// No server running — become the owner
+		logger.info("No owner found, taking over as owner...");
+		startAsOwner(port);
+	}, delay);
 }
 
 // ── Start as owner ─────────────────────────────────────────────────────────
@@ -219,65 +209,60 @@ function scheduleReconnect(port: number): void {
  * Returns a handle with the bound port and a `_stop` function.
  */
 function startAsOwner(effectivePort: number): InternalServerHandle {
-  wss = new WebSocketServer({ noServer: true });
+	wss = new WebSocketServer({ noServer: true });
 
-  const httpServer = serve(
-    {
-      fetch: app.fetch,
-      port: effectivePort,
-      websocket: { server: wss },
-    },
-  );
+	const httpServer = serve({
+		fetch: app.fetch,
+		port: effectivePort,
+		websocket: { server: wss },
+	});
 
-  // Handle port-already-in-use — another instance may have taken over
-  // between our client-mode check and this bind attempt.
-  httpServer.on("error", (err: NodeJS.ErrnoException) => {
-    if (err.code === "EADDRINUSE") {
-      logger.warn(
-        `Port ${effectivePort} is already in use — ` +
-          `another instance likely took over. Retrying as client...`,
-      );
-    } else {
-      logger.error(
-        `Server error on port ${effectivePort}:`,
-        err.message,
-      );
-    }
-    // Tear down failed owner state
-    if (wss) {
-      wss.close();
-      wss = null;
-    }
-    serverHandle = null;
-    rejectAllPending();
-    clearResponseHandlers();
+	// Handle port-already-in-use — another instance may have taken over
+	// between our client-mode check and this bind attempt.
+	httpServer.on("error", (err: NodeJS.ErrnoException) => {
+		if (err.code === "EADDRINUSE") {
+			logger.warn(
+				`Port ${effectivePort} is already in use — ` +
+					`another instance likely took over. Retrying as client...`,
+			);
+		} else {
+			logger.error(`Server error on port ${effectivePort}:`, err.message);
+		}
+		// Tear down failed owner state
+		if (wss) {
+			wss.close();
+			wss = null;
+		}
+		serverHandle = null;
+		rejectAllPending();
+		clearResponseHandlers();
 
-    // If it was EADDRINUSE, retry as client instead of giving up
-    if (err.code === "EADDRINUSE" && !isShuttingDown()) {
-      scheduleReconnect(effectivePort);
-    }
-  });
+		// If it was EADDRINUSE, retry as client instead of giving up
+		if (err.code === "EADDRINUSE" && !isShuttingDown()) {
+			scheduleReconnect(effectivePort);
+		}
+	});
 
-  const addr = httpServer.address();
-  const boundPort =
-    typeof addr === "object" && addr !== null ? addr.port : effectivePort;
+	const addr = httpServer.address();
+	const boundPort =
+		typeof addr === "object" && addr !== null ? addr.port : effectivePort;
 
-  logger.info(`Owner server listening on port ${boundPort}`);
+	logger.info(`Owner server listening on port ${boundPort}`);
 
-  serverHandle = {
-    port: boundPort,
-    _stop: () => {
-      closeAllWsConnections();
-      clearRelayState();
-      if (wss) {
-        wss.close();
-        wss = null;
-      }
-      httpServer.close();
-    },
-  };
+	serverHandle = {
+		port: boundPort,
+		_stop: () => {
+			closeAllWsConnections();
+			clearRelayState();
+			if (wss) {
+				wss.close();
+				wss = null;
+			}
+			httpServer.close();
+		},
+	};
 
-  return serverHandle;
+	return serverHandle;
 }
 
 // ── Public API: start ──────────────────────────────────────────────────────
@@ -298,53 +283,48 @@ function startAsOwner(effectivePort: number): InternalServerHandle {
  * @returns A handle with the bound port number.
  */
 export async function start(port?: number): Promise<InternalServerHandle> {
-  const effectivePort =
-    port ??
-    Number.parseInt(
-      process.env.PI_BROWSER_PORT ?? String(DEFAULT_PORT),
-      10,
-    );
+	const effectivePort =
+		port ??
+		Number.parseInt(process.env.PI_BROWSER_PORT ?? String(DEFAULT_PORT), 10);
 
-  setReconnectPort(effectivePort);
-  setShuttingDown(false);
+	setReconnectPort(effectivePort);
+	setShuttingDown(false);
 
-  // Idempotent: stop any previous server before starting a new one
-  if (wss !== null || getClientSocket() !== null) {
-    stop();
-  }
+	// Idempotent: stop any previous server before starting a new one
+	if (wss !== null || getClientSocket() !== null) {
+		stop();
+	}
 
-  // ── Try client mode first: connect to an existing owner server ──
-  const result = await tryConnectAsClient(effectivePort, handleMessage);
-  if (result) {
-    setClientSocket(result.ws);
+	// ── Try client mode first: connect to an existing owner server ──
+	const result = await tryConnectAsClient(effectivePort, handleMessage);
+	if (result) {
+		setClientSocket(result.ws);
 
-    // Attach close handler for failover
-    result.ws.on("close", () => {
-      setClientSocket(null);
-      if (isShuttingDown()) {
-        logger.info("Client disconnected (shutting down)");
-        return;
-      }
-      logger.warn(
-        "Lost connection to owner server — will attempt failover",
-      );
-      rejectAllPending();
-      scheduleReconnect(effectivePort);
-    });
+		// Attach close handler for failover
+		result.ws.on("close", () => {
+			setClientSocket(null);
+			if (isShuttingDown()) {
+				logger.info("Client disconnected (shutting down)");
+				return;
+			}
+			logger.warn("Lost connection to owner server — will attempt failover");
+			rejectAllPending();
+			scheduleReconnect(effectivePort);
+		});
 
-    return {
-      port: result.port,
-      _stop: () => {
-        if (getClientSocket()) {
-          closeClientSocket();
-          setClientSocket(null);
-        }
-      },
-    };
-  }
+		return {
+			port: result.port,
+			_stop: () => {
+				if (getClientSocket()) {
+					closeClientSocket();
+					setClientSocket(null);
+				}
+			},
+		};
+	}
 
-  // ── No server running — become the owner ──
-  return startAsOwner(effectivePort);
+	// ── No server running — become the owner ──
+	return startAsOwner(effectivePort);
 }
 
 // ── Public API: stop ───────────────────────────────────────────────────────
@@ -356,28 +336,28 @@ export async function start(port?: number): Promise<InternalServerHandle> {
  * `BROWSER_NOT_CONNECTED`, and response subscribers are cleared.
  */
 export function stop(): void {
-  setShuttingDown(true);
+	setShuttingDown(true);
 
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
+	if (reconnectTimer) {
+		clearTimeout(reconnectTimer);
+		reconnectTimer = null;
+	}
 
-  rejectAllPending();
+	rejectAllPending();
 
-  closeClientSocket();
-  setClientSocket(null);
-  setClientSequenceNumber(-1);
+	closeClientSocket();
+	setClientSocket(null);
+	setClientSequenceNumber(-1);
 
-  if (serverHandle) {
-    serverHandle._stop();
-    serverHandle = null;
-  }
+	if (serverHandle) {
+		serverHandle._stop();
+		serverHandle = null;
+	}
 
-  clearResponseHandlers();
+	clearResponseHandlers();
 }
 
 // ── Re-exports for convenience ─────────────────────────────────────────────
 
-export { send, onResponse };
 export type { ServerHandle };
+export { onResponse, send };

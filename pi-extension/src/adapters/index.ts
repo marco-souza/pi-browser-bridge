@@ -18,9 +18,18 @@
 export type { ClickParams } from "./browser-click.js";
 // ── Click ─────────────────────────────────────────────────────────────────
 export { browserClickTool, ClickSchema } from "./browser-click.js";
+export type { CloseTabParams } from "./browser-close-tab.js";
+// ── Close Tab ─────────────────────────────────────────────────────────────
+export { browserCloseTabTool, CloseTabSchema } from "./browser-close-tab.js";
+export type { CreateTabParams } from "./browser-create-tab.js";
+// ── Create Tab ────────────────────────────────────────────────────────────
+export { browserCreateTabTool, CreateTabSchema } from "./browser-create-tab.js";
 export type { ExecParams } from "./browser-exec.js";
 // ── Exec ──────────────────────────────────────────────────────────────────
 export { browserExecTool, ExecSchema } from "./browser-exec.js";
+export type { ListTabsParams } from "./browser-list-tabs.js";
+// ── List Tabs ─────────────────────────────────────────────────────────────
+export { browserListTabsTool, ListTabsSchema } from "./browser-list-tabs.js";
 export type { NavigateParams } from "./browser-navigate.js";
 // ── Navigate ──────────────────────────────────────────────────────────────
 export { browserNavigateTool, NavigateSchema } from "./browser-navigate.js";
@@ -33,15 +42,6 @@ export {
 	browserScreenshotTool,
 	ScreenshotSchema,
 } from "./browser-screenshot.js";
-// ── Create Tab ────────────────────────────────────────────────────────────
-export { browserCreateTabTool, CreateTabSchema } from "./browser-create-tab.js";
-export type { CreateTabParams } from "./browser-create-tab.js";
-// ── List Tabs ─────────────────────────────────────────────────────────────
-export { browserListTabsTool, ListTabsSchema } from "./browser-list-tabs.js";
-export type { ListTabsParams } from "./browser-list-tabs.js";
-// ── Close Tab ─────────────────────────────────────────────────────────────
-export { browserCloseTabTool, CloseTabSchema } from "./browser-close-tab.js";
-export type { CloseTabParams } from "./browser-close-tab.js";
 export type { TypeParams } from "./browser-type.js";
 // ── Type ─────────────────────────────────────────────────────────────────
 export { browserTypeTool, TypeSchema } from "./browser-type.js";
@@ -61,13 +61,13 @@ export {
 // ── Tool collection ───────────────────────────────────────────────────────
 
 import { browserClickTool } from "./browser-click.js";
+import { browserCloseTabTool } from "./browser-close-tab.js";
+import { browserCreateTabTool } from "./browser-create-tab.js";
 import { browserExecTool } from "./browser-exec.js";
+import { browserListTabsTool } from "./browser-list-tabs.js";
 import { browserNavigateTool } from "./browser-navigate.js";
 import { browserReadTool } from "./browser-read.js";
 import { browserScreenshotTool } from "./browser-screenshot.js";
-import { browserCreateTabTool } from "./browser-create-tab.js";
-import { browserListTabsTool } from "./browser-list-tabs.js";
-import { browserCloseTabTool } from "./browser-close-tab.js";
 import { browserTypeTool } from "./browser-type.js";
 import { browserWaitForElementTool } from "./browser-wait-for-element.js";
 import { browserWaitForTextTool } from "./browser-wait-for-text.js";

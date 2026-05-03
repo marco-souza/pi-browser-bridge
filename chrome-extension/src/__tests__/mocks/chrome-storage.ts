@@ -30,65 +30,63 @@ let storage: Record<string, unknown> = {};
  * ```
  */
 export const chromeStorageMock = {
-  // ── Store manipulation ────────────────────────────────────────────
+	// ── Store manipulation ────────────────────────────────────────────
 
-  /** Replace the entire in-memory store. */
-  setStore(data: Record<string, unknown>): void {
-    storage = { ...data };
-  },
+	/** Replace the entire in-memory store. */
+	setStore(data: Record<string, unknown>): void {
+		storage = { ...data };
+	},
 
-  /** Get a copy of the current store. */
-  getStore(): Readonly<Record<string, unknown>> {
-    return { ...storage };
-  },
+	/** Get a copy of the current store. */
+	getStore(): Readonly<Record<string, unknown>> {
+		return { ...storage };
+	},
 
-  /** Reset the store to empty. */
-  reset(): void {
-    storage = {};
-  },
+	/** Reset the store to empty. */
+	reset(): void {
+		storage = {};
+	},
 
-  // ── API methods ───────────────────────────────────────────────────
+	// ── API methods ───────────────────────────────────────────────────
 
-  get: vi.fn(
-    (
-      keys?: string | string[] | Record<string, unknown> | null,
-    ): Promise<Record<string, unknown>> => {
-      if (keys === null || keys === undefined) {
-        // Return entire store
-        return Promise.resolve({ ...storage });
-      }
+	get: vi.fn(
+		(
+			keys?: string | string[] | Record<string, unknown> | null,
+		): Promise<Record<string, unknown>> => {
+			if (keys === null || keys === undefined) {
+				// Return entire store
+				return Promise.resolve({ ...storage });
+			}
 
-      if (typeof keys === "string") {
-        return Promise.resolve({
-          [keys]: storage[keys],
-        });
-      }
+			if (typeof keys === "string") {
+				return Promise.resolve({
+					[keys]: storage[keys],
+				});
+			}
 
-      if (Array.isArray(keys)) {
-        const result: Record<string, unknown> = {};
-        for (const key of keys) {
-          result[key] = storage[key];
-        }
-        return Promise.resolve(result);
-      }
+			if (Array.isArray(keys)) {
+				const result: Record<string, unknown> = {};
+				for (const key of keys) {
+					result[key] = storage[key];
+				}
+				return Promise.resolve(result);
+			}
 
-      // keys is an object with default values
-      const result = { ...storage };
-      for (const key of Object.keys(keys)) {
-        if (result[key] === undefined) {
-          result[key] = keys[key];
-        }
-      }
-      return Promise.resolve(result);
-    },
-  ),
+			// keys is an object with default values
+			const result = { ...storage };
+			for (const key of Object.keys(keys)) {
+				if (result[key] === undefined) {
+					result[key] = keys[key];
+				}
+			}
+			return Promise.resolve(result);
+		},
+	),
 
-  set: vi.fn(
-    (items: Record<string, unknown>): Promise<void> => {
-      Object.assign(storage, items);
-      return Promise.resolve();
-    },
-  ),
+	set: vi.fn((items: Record<string, unknown>): Promise<void> => {
+		Object.assign(storage, items);
+		return Promise.resolve();
+	}),
 };
 
 /**
@@ -96,8 +94,8 @@ export const chromeStorageMock = {
  * Call in beforeAll to make chrome.storage.local available to tested code.
  */
 export function installChromeStorageMock(): void {
-  // Assign mock to globalThis.chrome.storage.local for Node test environments.
-  const g = globalThis as Record<string, unknown>;
-  g.chrome = g.chrome ?? {};
-  (g.chrome as Record<string, unknown>).storage = { local: chromeStorageMock };
+	// Assign mock to globalThis.chrome.storage.local for Node test environments.
+	const g = globalThis as Record<string, unknown>;
+	g.chrome = g.chrome ?? {};
+	(g.chrome as Record<string, unknown>).storage = { local: chromeStorageMock };
 }

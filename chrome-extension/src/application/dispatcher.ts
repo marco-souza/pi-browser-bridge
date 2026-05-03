@@ -28,13 +28,13 @@ type ActionHandler = (params: unknown) => Promise<unknown>;
 
 /** Mapping from action name to handler. */
 const handlers = new Map<string, ActionHandler>([
-  ["navigate", handleNavigate as ActionHandler],
-  ["click", handleClick as ActionHandler],
-  ["type", handleType as ActionHandler],
-  ["read", handleRead as ActionHandler],
-  ["exec", handleExec as ActionHandler],
-  ["waitForElement", handleWaitForElement as ActionHandler],
-  ["waitForText", handleWaitForText as ActionHandler],
+	["navigate", handleNavigate as ActionHandler],
+	["click", handleClick as ActionHandler],
+	["type", handleType as ActionHandler],
+	["read", handleRead as ActionHandler],
+	["exec", handleExec as ActionHandler],
+	["waitForElement", handleWaitForElement as ActionHandler],
+	["waitForText", handleWaitForText as ActionHandler],
 ]);
 
 // ── Public API ──────────────────────────────────────────────────────────────
@@ -53,19 +53,19 @@ export const ALL_ACTIONS = [...handlers.keys()] as const;
  *   response with code `"UNKNOWN_ACTION"` is returned.
  */
 export async function dispatch(
-  action: string,
-  params: unknown,
+	action: string,
+	params: unknown,
 ): Promise<unknown> {
-  const handler = handlers.get(action);
+	const handler = handlers.get(action);
 
-  if (!handler) {
-    const error: ErrorResponse = {
-      code: "UNKNOWN_ACTION",
-      message: `Unknown action: "${action}"`,
-      suggestion: `Supported actions: ${[...handlers.keys()].join(", ")}`,
-    };
-    return error;
-  }
+	if (!handler) {
+		const error: ErrorResponse = {
+			code: "UNKNOWN_ACTION",
+			message: `Unknown action: "${action}"`,
+			suggestion: `Supported actions: ${[...handlers.keys()].join(", ")}`,
+		};
+		return error;
+	}
 
-  return handler(params);
+	return handler(params);
 }

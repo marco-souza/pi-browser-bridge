@@ -17,21 +17,21 @@ import { defineConfig } from "vitest/config";
  * @see https://vitest.dev/guide/projects.html
  */
 export default defineConfig({
-  test: {
-    // Only Vitest-managed packages. bun:test packages (pi-extension,
-    // protocol) are not listed here to avoid conflicts.
-    projects: ["./chrome-extension"],
+	test: {
+		// Only Vitest-managed packages. bun:test packages (pi-extension,
+		// protocol) are not listed here to avoid conflicts.
+		projects: ["./chrome-extension"],
 
-    // Shared globals — individual projects can override
-    globals: true,
+		// Shared globals — individual projects can override
+		globals: true,
 
-    // Safe defaults for exclude patterns.
-    // e2e tests are explicitly excluded — they are manual pre-merge gates.
-    exclude: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/e2e.test.ts",
-      "**/e2e/**",
-    ],
-  },
+		// Safe defaults for exclude patterns.
+		// e2e tests are explicitly excluded — they are manual pre-merge gates.
+		exclude: [
+			"**/node_modules/**",
+			"**/dist/**",
+			"**/e2e.test.ts",
+			"**/e2e/**",
+		],
+	},
 });

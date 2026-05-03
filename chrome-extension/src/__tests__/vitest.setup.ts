@@ -23,10 +23,10 @@ import { beforeAll, vi } from "vitest";
 // outside of mock setup.
 
 beforeAll(() => {
-  // Global chrome namespace stub — individual tests override via mocks
-  if (typeof (globalThis as Record<string, unknown>).chrome === "undefined") {
-    (globalThis as Record<string, unknown>).chrome = {};
-  }
+	// Global chrome namespace stub — individual tests override via mocks
+	if (typeof (globalThis as Record<string, unknown>).chrome === "undefined") {
+		(globalThis as Record<string, unknown>).chrome = {};
+	}
 });
 
 // ── WebSocket stub ────────────────────────────────────────────────────

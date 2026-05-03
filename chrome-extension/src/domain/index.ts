@@ -63,13 +63,13 @@ export {
 	clickHandler,
 	typeHandler,
 } from "./interactions.js";
-export {
-	isRestrictedUrl,
-	validateScreenshotParams,
-} from "./screenshot.js";
 export type {
 	ScreenshotFormat,
 	ScreenshotParams,
 	ScreenshotValidationError,
 	ValidScreenshotParams,
+} from "./screenshot.js";
+export {
+	isRestrictedUrl,
+	validateScreenshotParams,
 } from "./screenshot.js";

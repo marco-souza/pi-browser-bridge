@@ -8,11 +8,10 @@
  * @module server
  */
 
-export {
-  start,
-  stop,
-  send,
-  onResponse,
-} from "./infrastructure/ws-server.js";
-
 export type { ServerHandle } from "./infrastructure/ws-server.js";
+export {
+	onResponse,
+	send,
+	start,
+	stop,
+} from "./infrastructure/ws-server.js";

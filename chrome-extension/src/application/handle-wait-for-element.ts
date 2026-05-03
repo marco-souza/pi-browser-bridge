@@ -14,8 +14,8 @@ import type { WaitForElementActionResult } from "./types.js";
 
 /** Parameters expected by the waitForElement handler. */
 interface WaitForElementParams {
-  selector: string;
-  timeout?: number;
+	selector: string;
+	timeout?: number;
 }
 
 /**
@@ -29,42 +29,42 @@ interface WaitForElementParams {
  *   or a {@link WaitForElementError} with a TIMEOUT code on failure.
  */
 export async function handleWaitForElement(
-  params: unknown,
+	params: unknown,
 ): Promise<WaitForElementActionResult> {
-  const p = params as WaitForElementParams | null | undefined;
-  const selector = p?.selector;
-  const timeout =
-    typeof p?.timeout === "number" &&
-    Number.isFinite(p.timeout) &&
-    p.timeout > 0
-      ? p.timeout
-      : 10000;
+	const p = params as WaitForElementParams | null | undefined;
+	const selector = p?.selector;
+	const timeout =
+		typeof p?.timeout === "number" &&
+		Number.isFinite(p.timeout) &&
+		p.timeout > 0
+			? p.timeout
+			: 10000;
 
-  if (typeof selector !== "string" || selector.length === 0) {
-    return {
-      found: false,
-      elapsedMs: 0,
-      selector: String(selector ?? ""),
-      error: "ELEMENT_NOT_FOUND",
-      message: "Missing required parameter: selector (non-empty string).",
-    };
-  }
+	if (typeof selector !== "string" || selector.length === 0) {
+		return {
+			found: false,
+			elapsedMs: 0,
+			selector: String(selector ?? ""),
+			error: "ELEMENT_NOT_FOUND",
+			message: "Missing required parameter: selector (non-empty string).",
+		};
+	}
 
-  try {
-    const result = await waitForElement(selector, timeout);
-    return {
-      found: true,
-      elapsedMs: result.elapsedMs,
-      selector,
-      tagName: result.element.tagName.toLowerCase(),
-    };
-  } catch {
-    return {
-      found: false,
-      elapsedMs: timeout,
-      selector,
-      error: "TIMEOUT",
-      message: `Element "${selector}" not found within ${timeout}ms.`,
-    };
-  }
+	try {
+		const result = await waitForElement(selector, timeout);
+		return {
+			found: true,
+			elapsedMs: result.elapsedMs,
+			selector,
+			tagName: result.element.tagName.toLowerCase(),
+		};
+	} catch {
+		return {
+			found: false,
+			elapsedMs: timeout,
+			selector,
+			error: "TIMEOUT",
+			message: `Element "${selector}" not found within ${timeout}ms.`,
+		};
+	}
 }

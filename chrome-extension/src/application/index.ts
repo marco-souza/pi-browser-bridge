@@ -10,7 +10,7 @@
 
 // ── Dispatcher ──────────────────────────────────────────────────────────────
 
-export { dispatch, ALL_ACTIONS } from "./dispatcher.js";
+export { ALL_ACTIONS, dispatch } from "./dispatcher.js";
 
 // ── Action handlers ─────────────────────────────────────────────────────────
 
@@ -18,8 +18,8 @@ export { handleClick } from "./handle-click.js";
 export { handleExec } from "./handle-exec.js";
 export { handleNavigate } from "./handle-navigate.js";
 export { handleRead } from "./handle-read.js";
-export { handleScreenshot } from "./handle-screenshot.js";
 export type { ScreenshotDependencies } from "./handle-screenshot.js";
+export { handleScreenshot } from "./handle-screenshot.js";
 export { handleType } from "./handle-type.js";
 export { handleWaitForElement } from "./handle-wait-for-element.js";
 export { handleWaitForText } from "./handle-wait-for-text.js";
@@ -27,23 +27,23 @@ export { handleWaitForText } from "./handle-wait-for-text.js";
 // ── Shared types ────────────────────────────────────────────────────────────
 
 export type {
-  HandlerSuccess,
-  HandlerError,
-  HandlerResult,
-  NavigateSuccess,
-  ClickSuccessResult,
-  ClickErrorResult,
-  ClickResult,
-  TypeSuccessResult,
-  TypeErrorResultData,
-  TypeActionResult,
-  ReadSuccess,
-  ScreenshotSuccess,
-  ExecSuccess,
-  WaitForElementSuccess,
-  WaitForElementError,
-  WaitForElementActionResult,
-  WaitForTextSuccess,
-  WaitForTextError,
-  WaitForTextActionResult,
+	ClickErrorResult,
+	ClickResult,
+	ClickSuccessResult,
+	ExecSuccess,
+	HandlerError,
+	HandlerResult,
+	HandlerSuccess,
+	NavigateSuccess,
+	ReadSuccess,
+	ScreenshotSuccess,
+	TypeActionResult,
+	TypeErrorResultData,
+	TypeSuccessResult,
+	WaitForElementActionResult,
+	WaitForElementError,
+	WaitForElementSuccess,
+	WaitForTextActionResult,
+	WaitForTextError,
+	WaitForTextSuccess,
 } from "./types.js";

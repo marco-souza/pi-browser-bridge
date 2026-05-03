@@ -10,9 +10,9 @@
 
 import type { BridgeTransport } from "../domain/ports.js";
 import type { ValidatedWaitForTextParams } from "../domain/schemas.js";
-import { sendRequest } from "./send-request.js";
 import { handleResponse } from "./handle-response.js";
-import type { WaitForTextResult, UseCaseResult } from "./types.js";
+import { sendRequest } from "./send-request.js";
+import type { UseCaseResult, WaitForTextResult } from "./types.js";
 
 /**
  * Wait for specific case-sensitive text content to appear on the page.
@@ -26,16 +26,16 @@ import type { WaitForTextResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeWaitForTextUseCase(
-  transport: BridgeTransport,
-  params: ValidatedWaitForTextParams,
+	transport: BridgeTransport,
+	params: ValidatedWaitForTextParams,
 ): Promise<UseCaseResult<WaitForTextResult>> {
-  const response = await sendRequest(transport, "waitForText", {
-    tabId: params.tabId,
-    text: params.text,
-    scope: params.scope,
-    timeout: params.timeout,
-  });
-  if (!response.success) return response;
+	const response = await sendRequest(transport, "waitForText", {
+		tabId: params.tabId,
+		text: params.text,
+		scope: params.scope,
+		timeout: params.timeout,
+	});
+	if (!response.success) return response;
 
-  return handleResponse<WaitForTextResult>(response.data);
+	return handleResponse<WaitForTextResult>(response.data);
 }

@@ -13,24 +13,22 @@
  * @module infrastructure/ws-transport
  */
 
-import { WebSocket as WSClient, type WebSocket } from "ws";
-
-import type {
-  Action,
-  ErrorResponse,
-  Request,
-  Response,
-} from "@pi-browser-bridge/protocol";
-
 import { createLogger } from "@pi-browser-bridge/logger";
 
-import type { BridgeTransport } from "../domain/ports.js";
+import type {
+	Action,
+	ErrorResponse,
+	Request,
+	Response,
+} from "@pi-browser-bridge/protocol";
+import { type WebSocket, WebSocket as WSClient } from "ws";
 import {
-  createNotConnectedError,
-  createOwnerNotConnectedError,
-  createSendFailedError,
-  createTimeoutError,
+	createNotConnectedError,
+	createOwnerNotConnectedError,
+	createSendFailedError,
+	createTimeoutError,
 } from "../domain/errors.js";
+import type { BridgeTransport } from "../domain/ports.js";
 
 import { getClientSocket } from "./ws-failover.js";
 
@@ -40,9 +38,9 @@ const logger = createLogger("pi-bridge:transport");
 
 /** A pending request waiting for a matching response from the browser. */
 export interface PendingRequest {
-  resolve: (response: Response) => void;
-  reject: (error: ErrorResponse) => void;
-  timer: ReturnType<typeof setTimeout>;
+	resolve: (response: Response) => void;
+	reject: (error: ErrorResponse) => void;
+	timer: ReturnType<typeof setTimeout>;
 }
 
 /** Subscriber callback for unsolicited responses. */
@@ -84,184 +82,175 @@ const RETRY_DELAY_MS = 500;
 
 /** Register a Chrome-extension WebSocket connection (owner mode). */
 export function addWsConnection(ws: WebSocket): void {
-  wsConnections.add(ws);
+	wsConnections.add(ws);
 }
 
 /** Unregister a Chrome-extension WebSocket connection. */
 export function removeWsConnection(ws: WebSocket): void {
-  wsConnections.delete(ws);
+	wsConnections.delete(ws);
 }
 
 /** Number of active Chrome-extension connections. */
 export function getWsConnectionCount(): number {
-  return wsConnections.size;
+	return wsConnections.size;
 }
 
 /** Get the first active Chrome-extension WebSocket (or undefined). */
 export function getAnyConnection(): WebSocket | undefined {
-  return wsConnections.values().next().value;
+	return wsConnections.values().next().value;
 }
 
 /** Close and remove all tracked connections. */
 export function closeAllWsConnections(): void {
-  for (const ws of wsConnections) {
-    try {
-      ws.close(1000, "Server shutting down");
-    } catch {
-      /* connection already closed — ignore */
-    }
-  }
-  wsConnections.clear();
+	for (const ws of wsConnections) {
+		try {
+			ws.close(1000, "Server shutting down");
+		} catch {
+			/* connection already closed — ignore */
+		}
+	}
+	wsConnections.clear();
 }
 
 // ── Pending request management ─────────────────────────────────────────────
 
 /** Register a pending request so its matching response can resolve it. */
-export function addPendingRequest(
-  id: string,
-  pr: PendingRequest,
-): void {
-  pendingRequests.set(id, pr);
+export function addPendingRequest(id: string, pr: PendingRequest): void {
+	pendingRequests.set(id, pr);
 }
 
 /** Resolve a pending request by id. Returns `true` if one was found. */
-export function resolvePendingRequest(
-  id: string,
-  response: Response,
-): void {
-  const pending = pendingRequests.get(id);
-  if (pending) {
-    clearTimeout(pending.timer);
-    pendingRequests.delete(id);
-    pending.resolve(response);
-  }
+export function resolvePendingRequest(id: string, response: Response): void {
+	const pending = pendingRequests.get(id);
+	if (pending) {
+		clearTimeout(pending.timer);
+		pendingRequests.delete(id);
+		pending.resolve(response);
+	}
 }
 
 /** Reject every pending request with `BROWSER_NOT_CONNECTED`. */
 export function rejectAllPending(): void {
-  const error = createNotConnectedError();
-  for (const [_id, pending] of pendingRequests) {
-    clearTimeout(pending.timer);
-    pending.reject(error);
-  }
-  pendingRequests.clear();
+	const error = createNotConnectedError();
+	for (const [_id, pending] of pendingRequests) {
+		clearTimeout(pending.timer);
+		pending.reject(error);
+	}
+	pendingRequests.clear();
 }
 
 // ── Response subscriptions ─────────────────────────────────────────────────
 
 /** Register a response subscriber. Returns an unsubscribe function. */
 export function addResponseHandler(handler: ResponseHandler): () => void {
-  responseHandlers.add(handler);
-  return () => {
-    responseHandlers.delete(handler);
-  };
+	responseHandlers.add(handler);
+	return () => {
+		responseHandlers.delete(handler);
+	};
 }
 
 /** Notify all subscribers of an incoming response. */
 export function notifyResponseHandlers(response: Response): void {
-  for (const handler of responseHandlers) {
-    try {
-      handler(response);
-    } catch (err) {
-      logger.error("Error in response handler:", err);
-    }
-  }
+	for (const handler of responseHandlers) {
+		try {
+			handler(response);
+		} catch (err) {
+			logger.error("Error in response handler:", err);
+		}
+	}
 }
 
 /** Remove all response subscribers. */
 export function clearResponseHandlers(): void {
-  responseHandlers.clear();
+	responseHandlers.clear();
 }
 
 // ── Client relay (owner mode) ──────────────────────────────────────────────
 
 /** Map a request id to the pi client that proxied it. */
 export function mapClientRequest(id: string, clientWs: WebSocket): void {
-  clientToRequest.set(id, clientWs);
+	clientToRequest.set(id, clientWs);
 }
 
 /** Start a timeout for a client-proxied request. */
 export function startClientRequestTimeout(
-  id: string,
-  clientWs: WebSocket,
+	id: string,
+	clientWs: WebSocket,
 ): void {
-  const timer = setTimeout(() => {
-    clientToRequest.delete(id);
-    requestTimers.delete(id);
-    try {
-      clientWs.send(
-        JSON.stringify({
-          id,
-          error: createTimeoutError(id, REQUEST_TIMEOUT_MS),
-        }),
-      );
-    } catch {
-      /* client already gone */
-    }
-  }, REQUEST_TIMEOUT_MS);
-  requestTimers.set(id, timer);
+	const timer = setTimeout(() => {
+		clientToRequest.delete(id);
+		requestTimers.delete(id);
+		try {
+			clientWs.send(
+				JSON.stringify({
+					id,
+					error: createTimeoutError(id, REQUEST_TIMEOUT_MS),
+				}),
+			);
+		} catch {
+			/* client already gone */
+		}
+	}, REQUEST_TIMEOUT_MS);
+	requestTimers.set(id, timer);
 }
 
 /** Resolve a client-proxied request and relay the response. */
-export function resolveClientRequest(
-  id: string,
-  data: string,
-): void {
-  const clientWs = clientToRequest.get(id);
-  if (!clientWs) return;
+export function resolveClientRequest(id: string, data: string): void {
+	const clientWs = clientToRequest.get(id);
+	if (!clientWs) return;
 
-  clientToRequest.delete(id);
-  const timer = requestTimers.get(id);
-  if (timer) {
-    clearTimeout(timer);
-    requestTimers.delete(id);
-  }
-  try {
-    clientWs.send(data);
-  } catch {
-    /* client disconnected — ignore */
-  }
+	clientToRequest.delete(id);
+	const timer = requestTimers.get(id);
+	if (timer) {
+		clearTimeout(timer);
+		requestTimers.delete(id);
+	}
+	try {
+		clientWs.send(data);
+	} catch {
+		/* client disconnected — ignore */
+	}
 }
 
 /** Clean up all relay state for a disconnected pi client. */
 export function cleanupClientRequests(clientWs: WebSocket): void {
-  for (const [id, ws] of clientToRequest) {
-    if (ws === clientWs) {
-      clientToRequest.delete(id);
-      const timer = requestTimers.get(id);
-      if (timer) {
-        clearTimeout(timer);
-        requestTimers.delete(id);
-      }
-    }
-  }
+	for (const [id, ws] of clientToRequest) {
+		if (ws === clientWs) {
+			clientToRequest.delete(id);
+			const timer = requestTimers.get(id);
+			if (timer) {
+				clearTimeout(timer);
+				requestTimers.delete(id);
+			}
+		}
+	}
 }
 
 /** Clear all client relay state (for shutdown). */
 export function clearRelayState(): void {
-  for (const timer of requestTimers.values()) {
-    clearTimeout(timer);
-  }
-  requestTimers.clear();
-  clientToRequest.clear();
-  clientSequences.clear();
-  nextClientSequence = 0;
+	for (const timer of requestTimers.values()) {
+		clearTimeout(timer);
+	}
+	requestTimers.clear();
+	clientToRequest.clear();
+	clientSequences.clear();
+	nextClientSequence = 0;
 }
 
 // ── Client sequence (owner mode) ───────────────────────────────────────────
 
 /** Assign a sequence number to a newly connected pi client. */
 export function assignClientSequence(ws: WebSocket): number {
-  const seq = nextClientSequence++;
-  clientSequences.set(ws, seq);
-  return seq;
+	const seq = nextClientSequence++;
+	clientSequences.set(ws, seq);
+	return seq;
 }
 
 /** Remove a pi client from sequence tracking. */
 export function removeClientSequence(ws: WebSocket): number {
-  const seq = clientSequences.get(ws) ?? -1;
-  clientSequences.delete(ws);
-  return seq;
+	const seq = clientSequences.get(ws) ?? -1;
+	clientSequences.delete(ws);
+	return seq;
 }
 
 // ── Message handling ───────────────────────────────────────────────────────
@@ -272,40 +261,40 @@ export function removeClientSequence(ws: WebSocket): number {
  * pi clients, and notifies subscribers.
  */
 export function handleMessage(data: string): void {
-  let message: unknown;
-  try {
-    message = JSON.parse(data);
-  } catch {
-    logger.error("Failed to parse incoming JSON:", data.slice(0, 200));
-    return;
-  }
+	let message: unknown;
+	try {
+		message = JSON.parse(data);
+	} catch {
+		logger.error("Failed to parse incoming JSON:", data.slice(0, 200));
+		return;
+	}
 
-  if (typeof message !== "object" || message === null) {
-    logger.error("Received non-object message:", typeof message);
-    return;
-  }
+	if (typeof message !== "object" || message === null) {
+		logger.error("Received non-object message:", typeof message);
+		return;
+	}
 
-  const response = message as Record<string, unknown>;
+	const response = message as Record<string, unknown>;
 
-  // Protocol-level keepalive — silently ignore
-  if (response.type === "ping") return;
+	// Protocol-level keepalive — silently ignore
+	if (response.type === "ping") return;
 
-  if (typeof response.id !== "string" || response.id.length === 0) {
-    logger.error("Received message without valid id:", data.slice(0, 200));
-    return;
-  }
+	if (typeof response.id !== "string" || response.id.length === 0) {
+		logger.error("Received message without valid id:", data.slice(0, 200));
+		return;
+	}
 
-  const responseId: string = response.id;
-  const typedResponse = message as Response;
+	const responseId: string = response.id;
+	const typedResponse = message as Response;
 
-  // ── Relay to pi client if this response belongs to a proxied request ──
-  resolveClientRequest(responseId, data);
+	// ── Relay to pi client if this response belongs to a proxied request ──
+	resolveClientRequest(responseId, data);
 
-  // ── Resolve local pending request ──
-  resolvePendingRequest(responseId, typedResponse);
+	// ── Resolve local pending request ──
+	resolvePendingRequest(responseId, typedResponse);
 
-  // ── Notify all subscribers ──
-  notifyResponseHandlers(typedResponse);
+	// ── Notify all subscribers ──
+	notifyResponseHandlers(typedResponse);
 }
 
 /**
@@ -314,72 +303,69 @@ export function handleMessage(data: string): void {
  * mapping so the response can be relayed back.
  */
 export function handleClientMessage(
-  data: string,
-  clientWs: WebSocket,
-  getConnection: () => WebSocket | undefined,
+	data: string,
+	clientWs: WebSocket,
+	getConnection: () => WebSocket | undefined,
 ): void {
-  let message: unknown;
-  try {
-    message = JSON.parse(data);
-  } catch {
-    logger.error("Failed to parse client JSON:", data.slice(0, 200));
-    return;
-  }
+	let message: unknown;
+	try {
+		message = JSON.parse(data);
+	} catch {
+		logger.error("Failed to parse client JSON:", data.slice(0, 200));
+		return;
+	}
 
-  if (typeof message !== "object" || message === null) return;
+	if (typeof message !== "object" || message === null) return;
 
-  const request = message as Record<string, unknown>;
+	const request = message as Record<string, unknown>;
 
-  // Keepalive — silently ignore
-  if (request.type === "ping") return;
+	// Keepalive — silently ignore
+	if (request.type === "ping") return;
 
-  if (typeof request.id !== "string" || request.id.length === 0) {
-    logger.error(
-      "Client sent message without valid id:",
-      data.slice(0, 200),
-    );
-    return;
-  }
+	if (typeof request.id !== "string" || request.id.length === 0) {
+		logger.error("Client sent message without valid id:", data.slice(0, 200));
+		return;
+	}
 
-  const requestId: string = request.id;
+	const requestId: string = request.id;
 
-  // Forward to Chrome extension
-  const browserWs = getConnection();
-  if (!browserWs) {
-    clientWs.send(
-      JSON.stringify({
-        id: requestId,
-        error: createNotConnectedError(),
-      }),
-    );
-    return;
-  }
+	// Forward to Chrome extension
+	const browserWs = getConnection();
+	if (!browserWs) {
+		clientWs.send(
+			JSON.stringify({
+				id: requestId,
+				error: createNotConnectedError(),
+			}),
+		);
+		return;
+	}
 
-  // Record mapping for relay
-  mapClientRequest(requestId, clientWs);
-  startClientRequestTimeout(requestId, clientWs);
+	// Record mapping for relay
+	mapClientRequest(requestId, clientWs);
+	startClientRequestTimeout(requestId, clientWs);
 
-  try {
-    browserWs.send(data);
-  } catch {
-    // Clean up on send failure
-    const timer = requestTimers.get(requestId);
-    if (timer) {
-      clearTimeout(timer);
-      requestTimers.delete(requestId);
-    }
-    clientToRequest.delete(requestId);
-    try {
-      clientWs.send(
-        JSON.stringify({
-          id: requestId,
-          error: createSendFailedError(),
-        }),
-      );
-    } catch {
-      /* client already gone */
-    }
-  }
+	try {
+		browserWs.send(data);
+	} catch {
+		// Clean up on send failure
+		const timer = requestTimers.get(requestId);
+		if (timer) {
+			clearTimeout(timer);
+			requestTimers.delete(requestId);
+		}
+		clientToRequest.delete(requestId);
+		try {
+			clientWs.send(
+				JSON.stringify({
+					id: requestId,
+					error: createSendFailedError(),
+				}),
+			);
+		} catch {
+			/* client already gone */
+		}
+	}
 }
 
 // ── Core API: send ─────────────────────────────────────────────────────────
@@ -395,9 +381,9 @@ export function handleClientMessage(
  * @typeParam A — Concrete action. Defaults to the full {@link Action} union.
  */
 export function send<A extends Action = Action>(
-  request: Request<A>,
+	request: Request<A>,
 ): Promise<Response<A>> {
-  return sendWithRetry(request, 1) as Promise<Response<A>>;
+	return sendWithRetry(request, 1) as Promise<Response<A>>;
 }
 
 /**
@@ -405,105 +391,113 @@ export function send<A extends Action = Action>(
  * failures up to {@link MAX_RETRIES} times.
  */
 function sendWithRetry<A extends Action = Action>(
-  request: Request<A>,
-  attempt: number,
+	request: Request<A>,
+	attempt: number,
 ): Promise<Response<A> | ErrorResponse> {
-  // Client mode: forward through the owner server
-  const clientWs = getClientSocket();
-  if (clientWs) {
-    return sendViaClient(request, clientWs, attempt);
-  }
+	// Client mode: forward through the owner server
+	const clientWs = getClientSocket();
+	if (clientWs) {
+		return sendViaClient(request, clientWs, attempt);
+	}
 
-  // Owner mode: send directly to the Chrome extension
-  const ws = wsConnections.values().next().value;
-  if (!ws) {
-    if (attempt <= MAX_RETRIES) {
-      return waitForConnection(RETRY_DELAY_MS * attempt).then((reconnected) => {
-        if (reconnected) {
-          return sendWithRetry(request, attempt + 1);
-        }
-        return Promise.reject(createNotConnectedError());
-      });
-    }
-    return Promise.reject(createNotConnectedError());
-  }
+	// Owner mode: send directly to the Chrome extension
+	const ws = wsConnections.values().next().value;
+	if (!ws) {
+		if (attempt <= MAX_RETRIES) {
+			return waitForConnection(RETRY_DELAY_MS * attempt).then((reconnected) => {
+				if (reconnected) {
+					return sendWithRetry(request, attempt + 1);
+				}
+				return Promise.reject(createNotConnectedError());
+			});
+		}
+		return Promise.reject(createNotConnectedError());
+	}
 
-  const id = request.id ?? crypto.randomUUID();
-  const outgoing = { ...request, id };
+	const id = request.id ?? crypto.randomUUID();
+	const outgoing = { ...request, id };
 
-  return new Promise<Response<A>>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      pendingRequests.delete(id);
-      reject(createTimeoutError(id, REQUEST_TIMEOUT_MS));
-    }, REQUEST_TIMEOUT_MS);
+	return new Promise<Response<A>>((resolve, reject) => {
+		const timer = setTimeout(() => {
+			pendingRequests.delete(id);
+			reject(createTimeoutError(id, REQUEST_TIMEOUT_MS));
+		}, REQUEST_TIMEOUT_MS);
 
-    addPendingRequest(id, { resolve: resolve as (r: Response) => void, reject, timer });
+		addPendingRequest(id, {
+			resolve: resolve as (r: Response) => void,
+			reject,
+			timer,
+		});
 
-    try {
-      ws.send(JSON.stringify(outgoing));
-    } catch {
-      clearTimeout(timer);
-      pendingRequests.delete(id);
+		try {
+			ws.send(JSON.stringify(outgoing));
+		} catch {
+			clearTimeout(timer);
+			pendingRequests.delete(id);
 
-      if (attempt <= MAX_RETRIES) {
-        logger.warn(
-          `Send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
-        );
-        setTimeout(() => {
-          sendWithRetry(request, attempt + 1)
-            .then((r) => resolve(r as Response<A>))
-            .catch(reject);
-        }, RETRY_DELAY_MS * attempt);
-      } else {
-        reject(createSendFailedError());
-      }
-    }
-  }) as Promise<Response<A>>;
+			if (attempt <= MAX_RETRIES) {
+				logger.warn(
+					`Send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
+				);
+				setTimeout(() => {
+					sendWithRetry(request, attempt + 1)
+						.then((r) => resolve(r as Response<A>))
+						.catch(reject);
+				}, RETRY_DELAY_MS * attempt);
+			} else {
+				reject(createSendFailedError());
+			}
+		}
+	}) as Promise<Response<A>>;
 }
 
 /**
  * Send a request over the client WebSocket to the owner server.
  */
 function sendViaClient<A extends Action = Action>(
-  request: Request<A>,
-  clientWs: WebSocket,
-  attempt: number,
+	request: Request<A>,
+	clientWs: WebSocket,
+	attempt: number,
 ): Promise<Response<A> | ErrorResponse> {
-  if (clientWs.readyState !== WSClient.OPEN) {
-    return Promise.reject(createOwnerNotConnectedError());
-  }
+	if (clientWs.readyState !== WSClient.OPEN) {
+		return Promise.reject(createOwnerNotConnectedError());
+	}
 
-  const id = request.id ?? crypto.randomUUID();
-  const outgoing = { ...request, id };
+	const id = request.id ?? crypto.randomUUID();
+	const outgoing = { ...request, id };
 
-  return new Promise<Response<A>>((resolve, reject) => {
-    const timer = setTimeout(() => {
-      pendingRequests.delete(id);
-      reject(createTimeoutError(id, REQUEST_TIMEOUT_MS));
-    }, REQUEST_TIMEOUT_MS);
+	return new Promise<Response<A>>((resolve, reject) => {
+		const timer = setTimeout(() => {
+			pendingRequests.delete(id);
+			reject(createTimeoutError(id, REQUEST_TIMEOUT_MS));
+		}, REQUEST_TIMEOUT_MS);
 
-    addPendingRequest(id, { resolve: resolve as (r: Response) => void, reject, timer });
+		addPendingRequest(id, {
+			resolve: resolve as (r: Response) => void,
+			reject,
+			timer,
+		});
 
-    try {
-      clientWs.send(JSON.stringify(outgoing));
-    } catch {
-      clearTimeout(timer);
-      pendingRequests.delete(id);
+		try {
+			clientWs.send(JSON.stringify(outgoing));
+		} catch {
+			clearTimeout(timer);
+			pendingRequests.delete(id);
 
-      if (attempt <= MAX_RETRIES) {
-        logger.warn(
-          `Client send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
-        );
-        setTimeout(() => {
-          sendViaClient(request, clientWs, attempt + 1)
-            .then((r) => resolve(r as Response<A>))
-            .catch(reject);
-        }, RETRY_DELAY_MS * attempt);
-      } else {
-        reject(createOwnerNotConnectedError());
-      }
-    }
-  }) as Promise<Response<A>>;
+			if (attempt <= MAX_RETRIES) {
+				logger.warn(
+					`Client send failed for request ${id}, retrying (${attempt}/${MAX_RETRIES})...`,
+				);
+				setTimeout(() => {
+					sendViaClient(request, clientWs, attempt + 1)
+						.then((r) => resolve(r as Response<A>))
+						.catch(reject);
+				}, RETRY_DELAY_MS * attempt);
+			} else {
+				reject(createOwnerNotConnectedError());
+			}
+		}
+	}) as Promise<Response<A>>;
 }
 
 /**
@@ -511,23 +505,23 @@ function sendViaClient<A extends Action = Action>(
  * Returns `true` if a connection was established within the timeout.
  */
 function waitForConnection(timeoutMs: number): Promise<boolean> {
-  return new Promise((resolve) => {
-    const deadline = Date.now() + timeoutMs;
+	return new Promise((resolve) => {
+		const deadline = Date.now() + timeoutMs;
 
-    function check() {
-      if (wsConnections.size > 0) {
-        resolve(true);
-        return;
-      }
-      if (Date.now() >= deadline) {
-        resolve(false);
-        return;
-      }
-      setTimeout(check, 100);
-    }
+		function check() {
+			if (wsConnections.size > 0) {
+				resolve(true);
+				return;
+			}
+			if (Date.now() >= deadline) {
+				resolve(false);
+				return;
+			}
+			setTimeout(check, 100);
+		}
 
-    check();
-  });
+		check();
+	});
 }
 
 // ── Public API: onResponse ─────────────────────────────────────────────────
@@ -539,7 +533,7 @@ function waitForConnection(timeoutMs: number): Promise<boolean> {
  * Returns an unsubscribe function.
  */
 export function onResponse(handler: ResponseHandler): () => void {
-  return addResponseHandler(handler);
+	return addResponseHandler(handler);
 }
 
 // ── BridgeTransport factory ────────────────────────────────────────────────
@@ -552,8 +546,8 @@ export function onResponse(handler: ResponseHandler): () => void {
  * coupling them to the module-level singletons.
  */
 export function createBridgeTransport(): BridgeTransport {
-  return {
-    send: send as BridgeTransport["send"],
-    onResponse,
-  };
+	return {
+		send: send as BridgeTransport["send"],
+		onResponse,
+	};
 }

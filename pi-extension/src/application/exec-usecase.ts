@@ -10,8 +10,8 @@
 
 import type { BridgeTransport } from "../domain/ports.js";
 import type { ValidatedExecParams } from "../domain/schemas.js";
-import { sendRequest } from "./send-request.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { ExecResult, UseCaseResult } from "./types.js";
 
 /**
@@ -26,14 +26,14 @@ import type { ExecResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeExecUseCase(
-  transport: BridgeTransport,
-  params: ValidatedExecParams,
+	transport: BridgeTransport,
+	params: ValidatedExecParams,
 ): Promise<UseCaseResult<ExecResult>> {
-  const response = await sendRequest(transport, "exec", {
-    tabId: params.tabId,
-    code: params.code,
-  });
-  if (!response.success) return response;
+	const response = await sendRequest(transport, "exec", {
+		tabId: params.tabId,
+		code: params.code,
+	});
+	if (!response.success) return response;
 
-  return handleResponse<ExecResult>(response.data);
+	return handleResponse<ExecResult>(response.data);
 }

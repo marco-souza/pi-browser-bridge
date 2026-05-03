@@ -11,46 +11,41 @@
  * @module infrastructure
  */
 
-export {
-  start,
-  stop,
-  send,
-  onResponse,
-} from "./ws-server.js";
-
-export type { ServerHandle } from "./ws-server.js";
-
-export {
-  createBridgeTransport,
-  handleMessage,
-  handleClientMessage,
-  cleanupClientRequests,
-  rejectAllPending,
-  addWsConnection,
-  removeWsConnection,
-  getAnyConnection,
-  getWsConnectionCount,
-  closeAllWsConnections,
-  clearResponseHandlers,
-  clearRelayState,
-  assignClientSequence,
-  removeClientSequence,
-} from "./ws-transport.js";
-
-export type { PendingRequest, ResponseHandler } from "./ws-transport.js";
-
-export {
-  getClientSocket,
-  setClientSocket,
-  getClientSequenceNumber,
-  setClientSequenceNumber,
-  isShuttingDown,
-  setShuttingDown,
-  getReconnectPort,
-  setReconnectPort,
-  clearClientState,
-  tryConnectAsClient,
-  closeClientSocket,
-} from "./ws-failover.js";
-
 export type { ClientConnection } from "./ws-failover.js";
+export {
+	clearClientState,
+	closeClientSocket,
+	getClientSequenceNumber,
+	getClientSocket,
+	getReconnectPort,
+	isShuttingDown,
+	setClientSequenceNumber,
+	setClientSocket,
+	setReconnectPort,
+	setShuttingDown,
+	tryConnectAsClient,
+} from "./ws-failover.js";
+export type { ServerHandle } from "./ws-server.js";
+export {
+	onResponse,
+	send,
+	start,
+	stop,
+} from "./ws-server.js";
+export type { PendingRequest, ResponseHandler } from "./ws-transport.js";
+export {
+	addWsConnection,
+	assignClientSequence,
+	cleanupClientRequests,
+	clearRelayState,
+	clearResponseHandlers,
+	closeAllWsConnections,
+	createBridgeTransport,
+	getAnyConnection,
+	getWsConnectionCount,
+	handleClientMessage,
+	handleMessage,
+	rejectAllPending,
+	removeClientSequence,
+	removeWsConnection,
+} from "./ws-transport.js";

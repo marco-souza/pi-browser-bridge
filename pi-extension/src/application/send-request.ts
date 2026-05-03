@@ -9,7 +9,12 @@
  * @module application/send-request
  */
 
-import type { Action, ErrorResponse, Request, Response } from "@pi-browser-bridge/protocol";
+import type {
+	Action,
+	ErrorResponse,
+	Request,
+	Response,
+} from "@pi-browser-bridge/protocol";
 import type { BridgeTransport } from "../domain/ports.js";
 import type { UseCaseResult } from "./types.js";
 
@@ -28,31 +33,31 @@ import type { UseCaseResult } from "./types.js";
  * @returns A discriminated union. Check `.success` before accessing `.data`.
  */
 export async function sendRequest<A extends Action>(
-  transport: BridgeTransport,
-  action: A,
-  params: Request<A>["params"],
+	transport: BridgeTransport,
+	action: A,
+	params: Request<A>["params"],
 ): Promise<UseCaseResult<Response<A>>> {
-  const request: Request<A> = {
-    id: crypto.randomUUID(),
-    action,
-    params,
-  };
+	const request: Request<A> = {
+		id: crypto.randomUUID(),
+		action,
+		params,
+	};
 
-  try {
-    const response = await transport.send(request);
-    return { success: true, data: response };
-  } catch (err) {
-    // Transport errors are already ErrorResponse objects (by contract
-    // of BridgeTransport.send). Defensively handle non-ErrorResponse
-    // throwables too.
-    const errorResponse = err as ErrorResponse;
-    return {
-      success: false,
-      error: {
-        code: errorResponse.code ?? "BROWSER_NOT_CONNECTED",
-        message: errorResponse.message ?? String(err),
-        suggestion: errorResponse.suggestion,
-      },
-    };
-  }
+	try {
+		const response = await transport.send(request);
+		return { success: true, data: response };
+	} catch (err) {
+		// Transport errors are already ErrorResponse objects (by contract
+		// of BridgeTransport.send). Defensively handle non-ErrorResponse
+		// throwables too.
+		const errorResponse = err as ErrorResponse;
+		return {
+			success: false,
+			error: {
+				code: errorResponse.code ?? "BROWSER_NOT_CONNECTED",
+				message: errorResponse.message ?? String(err),
+				suggestion: errorResponse.suggestion,
+			},
+		};
+	}
 }

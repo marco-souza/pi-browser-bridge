@@ -9,8 +9,8 @@
 
 import type { BridgeTransport } from "../domain/ports.js";
 import type { ValidatedClickParams } from "../domain/schemas.js";
-import { sendRequest } from "./send-request.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { ClickResult, UseCaseResult } from "./types.js";
 
 /**
@@ -22,16 +22,16 @@ import type { ClickResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeClickUseCase(
-  transport: BridgeTransport,
-  params: ValidatedClickParams,
+	transport: BridgeTransport,
+	params: ValidatedClickParams,
 ): Promise<UseCaseResult<ClickResult>> {
-  const response = await sendRequest(transport, "click", {
-    tabId: params.tabId,
-    selector: params.selector,
-    text: params.text,
-    timeout: params.timeout,
-  });
-  if (!response.success) return response;
+	const response = await sendRequest(transport, "click", {
+		tabId: params.tabId,
+		selector: params.selector,
+		text: params.text,
+		timeout: params.timeout,
+	});
+	if (!response.success) return response;
 
-  return handleResponse<ClickResult>(response.data);
+	return handleResponse<ClickResult>(response.data);
 }

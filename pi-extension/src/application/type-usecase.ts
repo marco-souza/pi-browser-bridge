@@ -9,8 +9,8 @@
 
 import type { BridgeTransport } from "../domain/ports.js";
 import type { ValidatedTypeParams } from "../domain/schemas.js";
-import { sendRequest } from "./send-request.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { TypeResult, UseCaseResult } from "./types.js";
 
 /**
@@ -25,18 +25,18 @@ import type { TypeResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeTypeUseCase(
-  transport: BridgeTransport,
-  params: ValidatedTypeParams,
+	transport: BridgeTransport,
+	params: ValidatedTypeParams,
 ): Promise<UseCaseResult<TypeResult>> {
-  const response = await sendRequest(transport, "type", {
-    tabId: params.tabId,
-    selector: params.selector,
-    text: params.text,
-    clear: params.clear,
-    submit: params.submit,
-    timeout: params.timeout,
-  });
-  if (!response.success) return response;
+	const response = await sendRequest(transport, "type", {
+		tabId: params.tabId,
+		selector: params.selector,
+		text: params.text,
+		clear: params.clear,
+		submit: params.submit,
+		timeout: params.timeout,
+	});
+	if (!response.success) return response;
 
-  return handleResponse<TypeResult>(response.data);
+	return handleResponse<TypeResult>(response.data);
 }

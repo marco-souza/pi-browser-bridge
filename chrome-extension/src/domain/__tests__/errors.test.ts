@@ -23,7 +23,10 @@ describe("timeoutError", () => {
 	});
 
 	test("creates a TIMEOUT error with optional suggestion", () => {
-		const err = timeoutError("Operation timed out", "Try increasing the timeout");
+		const err = timeoutError(
+			"Operation timed out",
+			"Try increasing the timeout",
+		);
 		expect(err.code).toBe("TIMEOUT");
 		expect(err.message).toBe("Operation timed out");
 		expect(err.suggestion).toBe("Try increasing the timeout");
@@ -50,9 +53,7 @@ describe("elementNotFoundError", () => {
 
 describe("elementNotInteractableError", () => {
 	test("creates an ELEMENT_NOT_INTERACTABLE error", () => {
-		const err = elementNotInteractableError(
-			"Element is hidden or disabled",
-		);
+		const err = elementNotInteractableError("Element is hidden or disabled");
 		expect(err.code).toBe("ELEMENT_NOT_INTERACTABLE");
 		expect(err.message).toBe("Element is hidden or disabled");
 	});

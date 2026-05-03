@@ -10,9 +10,9 @@
  * @module application/handle-read
  */
 
+import type { ErrorResponse } from "@pi-browser-bridge/protocol";
 import { extractText } from "../domain/index.js";
 import type { ReadSuccess } from "./types.js";
-import type { ErrorResponse } from "@pi-browser-bridge/protocol";
 
 /**
  * Read the visible text content of the active browser tab.
@@ -28,45 +28,45 @@ import type { ErrorResponse } from "@pi-browser-bridge/protocol";
  * @returns The extracted text on success, or a structured error on failure.
  */
 export async function handleRead(
-  params: unknown,
-  doc: Document = document,
+	params: unknown,
+	doc: Document = document,
 ): Promise<ReadSuccess | ErrorResponse> {
-  const p = params as Record<string, unknown> | null | undefined;
-  const selector = typeof p?.selector === "string" ? p.selector : undefined;
-  const maxLength =
-    typeof p?.maxLength === "number" &&
-    Number.isFinite(p.maxLength) &&
-    p.maxLength > 0
-      ? Math.floor(p.maxLength)
-      : 50_000;
+	const p = params as Record<string, unknown> | null | undefined;
+	const selector = typeof p?.selector === "string" ? p.selector : undefined;
+	const maxLength =
+		typeof p?.maxLength === "number" &&
+		Number.isFinite(p.maxLength) &&
+		p.maxLength > 0
+			? Math.floor(p.maxLength)
+			: 50_000;
 
-  let root: Element | null;
-  if (selector) {
-    try {
-      root = doc.querySelector(selector);
-    } catch {
-      return {
-        code: "ELEMENT_NOT_FOUND",
-        message: `Invalid CSS selector: "${selector}"`,
-        suggestion:
-          "Check the selector syntax. Use valid CSS selectors like '#id', '.class', or 'tag'.",
-      };
-    }
+	let root: Element | null;
+	if (selector) {
+		try {
+			root = doc.querySelector(selector);
+		} catch {
+			return {
+				code: "ELEMENT_NOT_FOUND",
+				message: `Invalid CSS selector: "${selector}"`,
+				suggestion:
+					"Check the selector syntax. Use valid CSS selectors like '#id', '.class', or 'tag'.",
+			};
+		}
 
-    if (!root) {
-      return {
-        code: "ELEMENT_NOT_FOUND",
-        message: `No element matching selector "${selector}" found on the page.`,
-        suggestion:
-          "Try a different selector. Common issues: the element might be inside a shadow DOM, an iframe, or loaded dynamically after page load.",
-      };
-    }
-  } else {
-    root = doc.body;
-    if (!root) {
-      return { text: "", length: 0, truncated: false };
-    }
-  }
+		if (!root) {
+			return {
+				code: "ELEMENT_NOT_FOUND",
+				message: `No element matching selector "${selector}" found on the page.`,
+				suggestion:
+					"Try a different selector. Common issues: the element might be inside a shadow DOM, an iframe, or loaded dynamically after page load.",
+			};
+		}
+	} else {
+		root = doc.body;
+		if (!root) {
+			return { text: "", length: 0, truncated: false };
+		}
+	}
 
-  return extractText(root, maxLength);
+	return extractText(root, maxLength);
 }

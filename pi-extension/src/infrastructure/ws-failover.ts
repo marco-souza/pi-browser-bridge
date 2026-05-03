@@ -13,9 +13,8 @@
  * @module infrastructure/ws-failover
  */
 
-import { WebSocket as WSClient } from "ws";
-
 import { createLogger } from "@pi-browser-bridge/logger";
+import { WebSocket as WSClient } from "ws";
 
 const logger = createLogger("pi-bridge:failover");
 
@@ -36,49 +35,49 @@ let reconnectPort = 9242;
 // ── Accessors ──────────────────────────────────────────────────────────────
 
 export function getClientSocket(): WSClient | null {
-  return clientSocket;
+	return clientSocket;
 }
 
 export function setClientSocket(ws: WSClient | null): void {
-  clientSocket = ws;
+	clientSocket = ws;
 }
 
 export function getClientSequenceNumber(): number {
-  return clientSequenceNumber;
+	return clientSequenceNumber;
 }
 
 export function setClientSequenceNumber(n: number): void {
-  clientSequenceNumber = n;
+	clientSequenceNumber = n;
 }
 
 export function isShuttingDown(): boolean {
-  return shuttingDown;
+	return shuttingDown;
 }
 
 export function setShuttingDown(v: boolean): void {
-  shuttingDown = v;
+	shuttingDown = v;
 }
 
 export function getReconnectPort(): number {
-  return reconnectPort;
+	return reconnectPort;
 }
 
 export function setReconnectPort(p: number): void {
-  reconnectPort = p;
+	reconnectPort = p;
 }
 
 /** Clear client-mode state (for shutdown / restart). */
 export function clearClientState(): void {
-  if (clientSocket) {
-    try {
-      clientSocket.close();
-    } catch {
-      /* already closed */
-    }
-    clientSocket = null;
-  }
-  clientSequenceNumber = -1;
-  shuttingDown = false;
+	if (clientSocket) {
+		try {
+			clientSocket.close();
+		} catch {
+			/* already closed */
+		}
+		clientSocket = null;
+	}
+	clientSequenceNumber = -1;
+	shuttingDown = false;
 }
 
 // ── tryConnectAsClient ─────────────────────────────────────────────────────
@@ -87,10 +86,10 @@ export function clearClientState(): void {
  * Result of a successful client connection attempt.
  */
 export interface ClientConnection {
-  /** The raw WebSocket to the owner server. */
-  ws: WSClient;
-  /** The port we connected on (echoed for convenience). */
-  port: number;
+	/** The raw WebSocket to the owner server. */
+	ws: WSClient;
+	/** The port we connected on (echoed for convenience). */
+	port: number;
 }
 
 /**
@@ -113,60 +112,60 @@ export interface ClientConnection {
  *   {@link ClientConnection} on success.
  */
 export function tryConnectAsClient(
-  port: number,
-  onMessage: (data: string) => void,
+	port: number,
+	onMessage: (data: string) => void,
 ): Promise<ClientConnection | null> {
-  return new Promise((resolve) => {
-    const url = `ws://localhost:${port}/client`;
-    const ws = new WSClient(url);
+	return new Promise((resolve) => {
+		const url = `ws://localhost:${port}/client`;
+		const ws = new WSClient(url);
 
-    const timeout = setTimeout(() => {
-      ws.close();
-      resolve(null);
-    }, 1500);
+		const timeout = setTimeout(() => {
+			ws.close();
+			resolve(null);
+		}, 1500);
 
-    ws.on("open", () => {
-      clearTimeout(timeout);
+		ws.on("open", () => {
+			clearTimeout(timeout);
 
-      let welcomed = false;
+			let welcomed = false;
 
-      ws.on("message", (data) => {
-        const raw = data.toString();
+			ws.on("message", (data) => {
+				const raw = data.toString();
 
-        // Intercept welcome message from owner (assigns failover priority)
-        if (!welcomed) {
-          try {
-            const msg = JSON.parse(raw);
-            if (msg.type === "welcome" && typeof msg.sequence === "number") {
-              clientSequenceNumber = msg.sequence;
-              welcomed = true;
-              logger.info(
-                `Connected as client to owner server on port ${port} ` +
-                  `(sequence ${clientSequenceNumber})`,
-              );
-              return;
-            }
-          } catch {
-            // Not JSON or not a welcome message — fall through to onMessage
-          }
-        }
+				// Intercept welcome message from owner (assigns failover priority)
+				if (!welcomed) {
+					try {
+						const msg = JSON.parse(raw);
+						if (msg.type === "welcome" && typeof msg.sequence === "number") {
+							clientSequenceNumber = msg.sequence;
+							welcomed = true;
+							logger.info(
+								`Connected as client to owner server on port ${port} ` +
+									`(sequence ${clientSequenceNumber})`,
+							);
+							return;
+						}
+					} catch {
+						// Not JSON or not a welcome message — fall through to onMessage
+					}
+				}
 
-        // Forward all other messages to the transport layer
-        onMessage(raw);
-      });
+				// Forward all other messages to the transport layer
+				onMessage(raw);
+			});
 
-      ws.on("error", (err) => {
-        logger.error("Client socket error:", err.message);
-      });
+			ws.on("error", (err) => {
+				logger.error("Client socket error:", err.message);
+			});
 
-      resolve({ ws, port });
-    });
+			resolve({ ws, port });
+		});
 
-    ws.on("error", () => {
-      clearTimeout(timeout);
-      resolve(null);
-    });
-  });
+		ws.on("error", () => {
+			clearTimeout(timeout);
+			resolve(null);
+		});
+	});
 }
 
 /**
@@ -174,12 +173,12 @@ export function tryConnectAsClient(
  * Safe to call when no client socket is active.
  */
 export function closeClientSocket(): void {
-  if (clientSocket) {
-    try {
-      clientSocket.close();
-    } catch {
-      /* already closed */
-    }
-    clientSocket = null;
-  }
+	if (clientSocket) {
+		try {
+			clientSocket.close();
+		} catch {
+			/* already closed */
+		}
+		clientSocket = null;
+	}
 }

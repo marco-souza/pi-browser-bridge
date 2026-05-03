@@ -16,9 +16,8 @@
 
 import type { Logger } from "@pi-browser-bridge/logger";
 import type { Response } from "@pi-browser-bridge/protocol";
-
-import { sleep } from "../domain/index.js";
 import { handleScreenshot } from "../application/handle-screenshot.js";
+import { sleep } from "../domain/index.js";
 import {
 	onInstalled,
 	onStorageKeyChanged,
@@ -306,8 +305,7 @@ async function serviceHandleCloseTab(
 			id,
 			error: {
 				code: "TAB_NOT_FOUND",
-				message:
-					"'tabId' is required and must be a valid integer.",
+				message: "'tabId' is required and must be a valid integer.",
 				suggestion: "Use listTabs to find a valid tabId.",
 			},
 		};
@@ -403,15 +401,15 @@ export async function init(logger: Logger): Promise<{
 			return serviceHandleNavigate(id, p, reqTabId, activeTabId);
 		},
 		handleScreenshot: async (id, p) => {
-			const tabId =
-				activeTabId.current ?? (await getActiveTabId());
+			const tabId = activeTabId.current ?? (await getActiveTabId());
 			if (tabId === null) {
 				return {
 					id,
 					error: {
 						code: "BROWSER_NOT_CONNECTED" as const,
 						message: "No active tab available for screenshot.",
-						suggestion: "Ensure a tab is open and active in the browser window.",
+						suggestion:
+							"Ensure a tab is open and active in the browser window.",
 					},
 				};
 			}

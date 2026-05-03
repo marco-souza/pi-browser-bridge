@@ -22,9 +22,9 @@ export let loadPort: () => Promise<number>;
 export let savePort: (port: number) => Promise<void>;
 
 init(logger).then((api) => {
-  connect = api.connect;
-  getActiveTabId = api.getActiveTabId;
-  loadPort = api.loadPort;
-  savePort = api.savePort;
-  connect();
+	connect = api.connect;
+	getActiveTabId = api.getActiveTabId;
+	loadPort = api.loadPort;
+	savePort = api.savePort;
+	connect();
 });

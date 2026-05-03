@@ -10,8 +10,8 @@
 
 import type { BridgeTransport } from "../domain/ports.js";
 import type { ValidatedReadParams } from "../domain/schemas.js";
-import { sendRequest } from "./send-request.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { ReadResult, UseCaseResult } from "./types.js";
 
 /**
@@ -26,15 +26,15 @@ import type { ReadResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeReadUseCase(
-  transport: BridgeTransport,
-  params: ValidatedReadParams,
+	transport: BridgeTransport,
+	params: ValidatedReadParams,
 ): Promise<UseCaseResult<ReadResult>> {
-  const response = await sendRequest(transport, "read", {
-    tabId: params.tabId,
-    selector: params.selector,
-    maxLength: params.maxLength,
-  });
-  if (!response.success) return response;
+	const response = await sendRequest(transport, "read", {
+		tabId: params.tabId,
+		selector: params.selector,
+		maxLength: params.maxLength,
+	});
+	if (!response.success) return response;
 
-  return handleResponse<ReadResult>(response.data);
+	return handleResponse<ReadResult>(response.data);
 }

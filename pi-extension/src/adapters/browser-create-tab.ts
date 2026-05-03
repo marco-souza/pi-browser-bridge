@@ -28,10 +28,13 @@ import { createBridgeTransport } from "../infrastructure/ws-transport.js";
 
 // ── TypeBox Schema ────────────────────────────────────────────────────────
 
-export const CreateTabSchema = Type.Object({
-	url: Type.Optional(Type.String()),
-	active: Type.Optional(Type.Boolean()),
-}, { default: { active: true } });
+export const CreateTabSchema = Type.Object(
+	{
+		url: Type.Optional(Type.String()),
+		active: Type.Optional(Type.Boolean()),
+	},
+	{ default: { active: true } },
+);
 
 export type CreateTabParams = Static<typeof CreateTabSchema>;
 

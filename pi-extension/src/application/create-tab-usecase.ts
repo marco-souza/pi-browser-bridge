@@ -9,10 +9,10 @@
  * @module application/create-tab-usecase
  */
 
-import type { ValidatedCreateTabParams } from "../domain/schemas.js";
 import type { BridgeTransport } from "../domain/ports.js";
-import { sendRequest } from "./send-request.js";
+import type { ValidatedCreateTabParams } from "../domain/schemas.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { CreateTabResult, UseCaseResult } from "./types.js";
 
 /**
@@ -24,16 +24,16 @@ import type { CreateTabResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeCreateTabUseCase(
-  transport: BridgeTransport,
-  params: ValidatedCreateTabParams,
+	transport: BridgeTransport,
+	params: ValidatedCreateTabParams,
 ): Promise<UseCaseResult<CreateTabResult>> {
-  // ── Build and send request ────────────────────────────────────────
-  const response = await sendRequest(transport, "createTab", {
-    url: params.url,
-    active: params.active,
-  });
-  if (!response.success) return response;
+	// ── Build and send request ────────────────────────────────────────
+	const response = await sendRequest(transport, "createTab", {
+		url: params.url,
+		active: params.active,
+	});
+	if (!response.success) return response;
 
-  // ── Extract result ────────────────────────────────────────────────
-  return handleResponse<CreateTabResult>(response.data);
+	// ── Extract result ────────────────────────────────────────────────
+	return handleResponse<CreateTabResult>(response.data);
 }

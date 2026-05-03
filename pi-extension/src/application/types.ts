@@ -13,16 +13,16 @@ import type { ErrorResponse } from "@pi-browser-bridge/protocol";
 
 /** Successful use case outcome. */
 export interface UseCaseSuccess<T> {
-  success: true;
-  /** The domain-level result data. */
-  data: T;
+	success: true;
+	/** The domain-level result data. */
+	data: T;
 }
 
 /** Failed use case outcome with a structured protocol error. */
 export interface UseCaseError {
-  success: false;
-  /** Structured error from either transport or the browser extension. */
-  error: ErrorResponse;
+	success: false;
+	/** Structured error from either transport or the browser extension. */
+	error: ErrorResponse;
 }
 
 /**
@@ -37,92 +37,92 @@ export type UseCaseResult<T> = UseCaseSuccess<T> | UseCaseError;
 
 /** Navigate use case result. */
 export interface NavigateResult {
-  url: string;
-  title: string;
+	url: string;
+	title: string;
 }
 
 /** Click use case success result. */
 export interface ClickResult {
-  clicked: true;
-  selector: string;
-  text: string;
-  navigated: boolean;
-  newTitle?: string;
-  newUrl?: string;
+	clicked: true;
+	selector: string;
+	text: string;
+	navigated: boolean;
+	newTitle?: string;
+	newUrl?: string;
 }
 
 /** Type use case result. */
 export interface TypeResult {
-  typed: boolean;
-  selector: string;
-  value: string;
-  suggestions?: string;
+	typed: boolean;
+	selector: string;
+	value: string;
+	suggestions?: string;
 }
 
 /** Screenshot use case result. */
 export interface ScreenshotResult {
-  data: string;
-  format: "png" | "jpeg";
-  warning?: string;
+	data: string;
+	format: "png" | "jpeg";
+	warning?: string;
 }
 
 /** Read use case result. */
 export interface ReadResult {
-  text: string;
-  length: number;
-  truncated?: boolean;
+	text: string;
+	length: number;
+	truncated?: boolean;
 }
 
 /** Exec use case result. */
 export interface ExecResult {
-  serialized: string;
+	serialized: string;
 }
 
 /** Wait-for-element use case success result. */
 export interface WaitForElementResult {
-  found: true;
-  elapsedMs: number;
-  selector: string;
-  tagName: string;
+	found: true;
+	elapsedMs: number;
+	selector: string;
+	tagName: string;
 }
 
 /** Wait-for-text use case success result. */
 export interface WaitForTextResult {
-  found: true;
-  elapsedMs: number;
-  text: string;
+	found: true;
+	elapsedMs: number;
+	text: string;
 }
 
 /** Create-tab use case result. */
 export interface CreateTabResult {
-  /** The ID of the newly created tab. */
-  tabId: number;
-  /** The URL loaded in the new tab. */
-  url: string;
-  /** The page title of the new tab. */
-  title: string;
+	/** The ID of the newly created tab. */
+	tabId: number;
+	/** The URL loaded in the new tab. */
+	url: string;
+	/** The page title of the new tab. */
+	title: string;
 }
 
 /** A single tab descriptor returned by the listTabs use case. */
 export interface TabDescriptor {
-  /** Tab ID. */
-  tabId: number;
-  /** Full URL of the tab. */
-  url: string;
-  /** Page title. */
-  title: string;
-  /** Whether this tab is currently active. */
-  active: boolean;
+	/** Tab ID. */
+	tabId: number;
+	/** Full URL of the tab. */
+	url: string;
+	/** Page title. */
+	title: string;
+	/** Whether this tab is currently active. */
+	active: boolean;
 }
 
 /** List-tabs use case result. */
 export interface ListTabsResult {
-  /** Array of tab descriptors matching the filter criteria. */
-  tabs: TabDescriptor[];
+	/** Array of tab descriptors matching the filter criteria. */
+	tabs: TabDescriptor[];
 }
 
 /** Close-tab use case result. */
 export interface CloseTabResult {
-  /** Always true when the tab was successfully closed. */
-  closed: true;
+	/** Always true when the tab was successfully closed. */
+	closed: true;
 }

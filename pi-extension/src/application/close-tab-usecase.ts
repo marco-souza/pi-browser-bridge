@@ -9,10 +9,10 @@
  * @module application/close-tab-usecase
  */
 
-import type { ValidatedCloseTabParams } from "../domain/schemas.js";
 import type { BridgeTransport } from "../domain/ports.js";
-import { sendRequest } from "./send-request.js";
+import type { ValidatedCloseTabParams } from "../domain/schemas.js";
 import { handleResponse } from "./handle-response.js";
+import { sendRequest } from "./send-request.js";
 import type { CloseTabResult, UseCaseResult } from "./types.js";
 
 /**
@@ -24,15 +24,15 @@ import type { CloseTabResult, UseCaseResult } from "./types.js";
  *   or a structured protocol error on failure.
  */
 export async function executeCloseTabUseCase(
-  transport: BridgeTransport,
-  params: ValidatedCloseTabParams,
+	transport: BridgeTransport,
+	params: ValidatedCloseTabParams,
 ): Promise<UseCaseResult<CloseTabResult>> {
-  // ── Build and send request ────────────────────────────────────────
-  const response = await sendRequest(transport, "closeTab", {
-    tabId: params.tabId,
-  });
-  if (!response.success) return response;
+	// ── Build and send request ────────────────────────────────────────
+	const response = await sendRequest(transport, "closeTab", {
+		tabId: params.tabId,
+	});
+	if (!response.success) return response;
 
-  // ── Extract result ────────────────────────────────────────────────
-  return handleResponse<CloseTabResult>(response.data);
+	// ── Extract result ────────────────────────────────────────────────
+	return handleResponse<CloseTabResult>(response.data);
 }

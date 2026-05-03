@@ -7,11 +7,11 @@ description: >
   done by pi subagents running in background tmux sessions.
 metadata:
   scripts:
-    - ../../scripts/validate-dag.py
-    - .agents/scripts/generate-prompts.py
-    - .agents/scripts/spawn-subagents.py
-    - .agents/scripts/monitor-subagents.sh
-  runtime: python3
+    - ../../scripts/validate-dag.ts
+    - ../../scripts/generate-prompts.ts
+    - ../../scripts/spawn-wave.sh
+    - ../../scripts/status-tasks.ts
+  runtime: bun
 ---
 
 # Implement Tasks (Pure Orchestrator)
@@ -44,9 +44,10 @@ monitors — all code changes come from subagents.
 - The `mixture-of-experts` skill is available (for expert definitions)
 - The `terminal-multiplexer` skill is available (for tmux session management)
 - Reusable scripts in `.agents/scripts/`:
-  - `generate-prompts.py` — writes `tasks/TASK-XXXX-prompt` from tasks.json
-  - `spawn-subagents.py` — launches tmux sessions respecting the DAG
-  - `monitor-subagents.sh` — polls for DONE markers and reports progress
+  - `validate-dag.ts` — validates tasks.json structure and DAG
+  - `generate-prompts.ts` — writes `tasks/TASK-XXXX-prompt` from tasks.json (auto-validates)
+  - `spawn-wave.sh` — launches tmux sessions respecting the DAG
+  - `status-tasks.ts` — shows task status (done/running/pending/blocked)
 
 ## Output Convention
 
@@ -133,10 +134,10 @@ Before implementing, check for common issues:
 Run validation with the shared DAG validator:
 
 ```bash
-../../scripts/validate-dag.py tasks.json --summary
+bun .agents/scripts/validate-dag.ts tasks.json --summary
 ```
 
-This checks: valid JSON, missing dependencies, circular dependencies (Kahn's algorithm), phase keys, unique IDs, agent/moeExperts fields, and agent summary consistency. With `--summary` it also prints the topological order and hour estimates.
+This checks: valid JSON, missing dependencies, circular dependencies, phase keys, unique IDs, agent/moeExperts fields, and agent summary consistency. With `--summary` it also prints the topological order, waves, and hour estimates.
 
 **If validation fails**, the script exits with code 1 and prints a specific error. Stop and report the issues. Do NOT proceed until fixed.
 
@@ -156,60 +157,15 @@ Wait for all tasks in a wave to complete before launching the next wave.
 
 ### Step 4: Generate Prompt Files
 
-Write one self-contained prompt file per task to `tasks/TASK-XXXX-prompt`.
-These files are the **only input** subagents receive — they must contain
-everything needed to implement the task autonomously.
+Use the shared prompt generator — it auto-validates, includes PRD context, and orders tasks topologically:
 
 ```bash
-# Generate all prompt files from tasks.json (Python, no quoting issues)
-python3 << 'PYEOF'
-import json, os
-
-os.makedirs("tasks", exist_ok=True)
-project_dir = os.getcwd()
-
-with open("tasks.json") as f:
-    data = json.load(f)
-
-for t in data["tasks"]:
-    tid = t["id"]
-    deps = ", ".join(t["dependencies"]) if t["dependencies"] else "(none)"
-    experts = ", ".join(t["moeExperts"])
-
-    prompt = f"""WORKDIR: {project_dir}
-TASK_ID: {tid}
-TASK_TITLE: {t["title"]}
-AGENT: {t["agent"]}
-MOE_EXPERTS: {experts}
-PHASE: {t["phase"]}
-DEPS: {deps}
-
-DESCRIPTION:
-{t["description"]}
-
-WHAT YOU MUST DO:
-Read the relevant source files, implement the changes, then verify
-against each acceptance criterion. Write real code, not plans.
-
-ACCEPTANCE CRITERIA:
-"""
-    for ac in t["acceptanceCriteria"]:
-        prompt += f"- {ac}\n"
-
-    prompt += f"""
-EXPERT PERSPECTIVES TO CONSIDER:
-{chr(10).join(f"- {e}" for e in t["moeExperts"])}
-
-AFTER COMPLETION:
-Write "{tid}_DONE" to tasks/{tid}.done
-"""
-
-    with open(f"tasks/{tid}-prompt", "w") as f:
-        f.write(prompt)
-
-print(f"Generated {len(data['tasks'])} prompt files in tasks/")
-PYEOF
+bun .agents/scripts/generate-prompts.ts
 ```
+
+For manual generation or custom logic, write one self-contained prompt file per task to `tasks/TASK-XXXX-prompt`.
+These files are the **only input** subagents receive — they must contain
+everything needed to implement the task autonomously.
 
 > **Output convention:** Prompts go to `tasks/TASK-XXXX-prompt`.
 > Subagent output goes to `tasks/TASK-XXXX.out`. DONE markers go to
@@ -218,67 +174,33 @@ PYEOF
 ### Step 5: Spawn tmux Subagents (NEVER implement directly)
 
 **This skill is a pure orchestrator — it never writes code itself.** Every
-task is delegated to an isolated tmux session running `pi`. The three-part
-pattern below avoids all quoting issues.
-
-#### 5a. Generate runner scripts with base64 (Python — zero quoting bugs)
+task is delegated to an isolated tmux session running `pi`. Use the shared
+spawn script which handles base64 encoding, prompt files, and wave ordering:
 
 ```bash
-python3 << 'PYEOF'
-import os, base64
+# Spawn next ready wave (auto-detects pending tasks with met dependencies)
+bash .agents/scripts/spawn-wave.sh
 
-project_dir = os.getcwd()
-ready = ["T001", "T003"]  # Wave 1: no dependencies
+# Spawn ALL remaining waves, waiting between each
+bash .agents/scripts/spawn-wave.sh --all
 
-for tid in ready:
-    # Read and base64-encode the prompt → safe in any shell string
-    with open(f"tasks/{tid}-prompt") as f:
-        prompt_b64 = base64.b64encode(f.read().encode()).decode()
+# Spawn specific tasks
+bash .agents/scripts/spawn-wave.sh T001 T003
 
-    script = f"/tmp/task-{tid}.sh"
-    with open(script, "w") as f:
-        f.write("#!/bin/bash\n")
-        f.write(f"cd {project_dir}\n")
-        f.write(f'PROMPT_B64="{prompt_b64}"\n')
-        f.write(f'pi --thinking low -p "$(echo "$PROMPT_B64" | base64 -d)" \\\n')
-        f.write(f'  2>&1 | tee tasks/{tid}.out\n')
-        f.write(f'echo "{tid}_DONE" > tasks/{tid}.done\n')
-    os.chmod(script, 0o755)
-    print(f"Generated {script} ({len(prompt_b64)} bytes b64)")
-PYEOF
+# Preview what would spawn
+bash .agents/scripts/spawn-wave.sh --dry-run
 ```
 
-#### 5b. Launch tmux sessions (auto-die on completion)
+The script auto-generates prompts if missing, validates tasks.json, and skips
+already-completed tasks (`.done` markers).
+
+For manual status checks:
 
 ```bash
-tmux new-session -d -s task-T001 "bash /tmp/task-T001.sh"
-tmux new-session -d -s task-T003 "bash /tmp/task-T003.sh"
-tmux ls | grep task  # verify they started
+bun .agents/scripts/status-tasks.ts          # full status table
+bun .agents/scripts/status-tasks.ts --compact # one-line summary
+bun .agents/scripts/status-tasks.ts --pending # only pending/blocked
 ```
-
-#### 5c. Wait for wave completion
-
-```bash
-for tid in T001 T003; do
-  echo -n "${tid}: "
-  while [ ! -f "tasks/${tid}.done" ]; do sleep 3; done
-  echo "done"
-done
-# Sessions died automatically — just remove stale references
-tmux kill-session -t task-T001 2>/dev/null
-tmux kill-session -t task-T002 2>/dev/null
-```
-
-#### 5d. Repeat for subsequent waves
-
-After Wave 1 completes (`.done` files exist), launch Wave 2 with the same
-pattern. Each wave only starts when all its dependencies' `.done` markers
-exist.
-
-> **⚠️ Why this pattern:** `tmux send-keys` with inline prompts breaks on
-> quotes/backticks/newlines. The pattern above uses: Python-generated prompt
-> files → Python-generated runner scripts → `tmux new-session 'bash script.sh'`.
-> Zero quoting issues, 100% reproducible.
 
 ### Step 6: Verify Completion
 
@@ -397,66 +319,26 @@ All 24 criteria across 8 tasks verified.
 
 ```bash
 #!/bin/bash
-# Pure orchestrator — generates prompts, spawns subagents, monitors DONE markers.
+# Pure orchestrator — validates, generates prompts, spawns subagents, monitors.
 # NEVER implements code directly.
 
 set -e
 TASKS_FILE="tasks.json"
-PROJECT=$(python3 -c "import json; print(json.load(open('$TASKS_FILE'))['metadata']['project'])")
+SCRIPTS=".agents/scripts"
 
-echo "🚀 Orchestrating: $PROJECT"
+echo "🚀 Orchestrating: $(bun -e "import { loadTasks } from './$SCRIPTS/lib/tasks-lib.ts'; const d = await loadTasks('$TASKS_FILE'); console.log(d.metadata.project)")"
 
 # Step 1: Validate DAG
-python3 .agents/scripts/validate-dag.py "$TASKS_FILE" --summary
+bun $SCRIPTS/validate-dag.ts "$TASKS_FILE" --summary
 
-# Step 2: Generate prompt files
-python3 << 'PYEOF'
-import json, os
-os.makedirs("tasks", exist_ok=True)
-project_dir = os.getcwd()
-with open("tasks.json") as f:
-    data = json.load(f)
-for t in data["tasks"]:
-    tid = t["id"]
-    deps = ", ".join(t["dependencies"]) if t["dependencies"] else "(none)"
-    prompt = f"WORKDIR: {project_dir}\nTASK_ID: {tid}\nTASK_TITLE: {t['title']}\nAGENT: {t['agent']}\nMOE_EXPERTS: {', '.join(t['moeExperts'])}\nPHASE: {t['phase']}\nDEPS: {deps}\n\nDESCRIPTION:\n{t['description']}\n\nACCEPTANCE CRITERIA:\n"
-    for ac in t['acceptanceCriteria']:
-        prompt += f"- {ac}\n"
-    prompt += f"\nAFTER COMPLETION: Write '{tid}_DONE' to tasks/{tid}.done\n"
-    with open(f"tasks/{tid}-prompt", "w") as f:
-        f.write(prompt)
-print(f"Generated {len(data['tasks'])} prompt files")
-PYEOF
+# Step 2: Generate prompt files (auto-validates, includes PRD context)
+bun $SCRIPTS/generate-prompts.ts "$TASKS_FILE"
 
-# Step 3: Launch waves (simplified — real code uses DAG-aware spawner)
-WAVES=("T001,T003" "T002,T004" "T005")
-for wave in "${WAVES[@]}"; do
-  IFS=',' read -ra TIDS <<< "$wave"
-  for tid in "${TIDS[@]}"; do
-    python3 -c "
-import os
-s = f'/tmp/task-${tid}.sh'
-with open(s, 'w') as f:
-    f.write('#!/bin/bash\n')
-    f.write(f'cd {os.getcwd()}\n')
-    f.write(f'pi --thinking low --append-system-prompt tasks/${tid}-prompt \\\n')
-    f.write(f'  -p \"Implement this task. Verify each acceptance criterion.\" \\\n')
-    f.write(f'  2>&1 | tee tasks/${tid}.out\n')
-    f.write(f'echo \"${tid}_DONE\" > tasks/${tid}.done\n')
-os.chmod(s, 0o755)
-"
-    tmux new-session -d -s "task-${tid}" "bash /tmp/task-${tid}.sh"
-    echo "  → ${tid} spawned"
-  done
+# Step 3: Launch all waves (auto-resolves dependencies, waits between waves)
+bash $SCRIPTS/spawn-wave.sh --all
 
-  # Wait for wave
-  for tid in "${TIDS[@]}"; do
-    while [ ! -f "tasks/${tid}.done" ]; do sleep 3; done
-    echo "  ✓ ${tid} complete"
-  done
-done
-
-echo "🎉 Orchestration complete: $PROJECT"
+echo "🎉 Orchestration complete"
+bun $SCRIPTS/status-tasks.ts --compact
 ```
 
 ## Best Practices
